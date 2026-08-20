@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- BANNER -->
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366F1,100:8B5CF6&height=220&section=header&text=MockMate%20AI&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Your%20AI-Powered%20Mock%20Interview%20Coach&descAlignY=58&descSize=18" width="100%"/>
+<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/f98893a2-e9ae-493e-ad12-4e3f41ba313b" /> 
 
 <!-- BADGES -->
 <p>
