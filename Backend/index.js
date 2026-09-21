@@ -7,6 +7,7 @@ import authRouter from "./router/auth.route.js";
 import userRouter from "./router/user.route.js";
 import interviewRouter from "./router/interview.router.js";
 import paymentRouter from "./router/payment.route.js";
+import { stripeWebhook } from "./controllers/payment.controller.js";
 dotenv.config();
 
 const app = express();
@@ -15,6 +16,9 @@ app.use(cors({
     origin: "http://localhost:5173",
     credentials: true
 }));
+
+// Stripe webhook must use raw body parser
+app.post("/api/payment/webhook", express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.json());
 app.use(cookieParser());

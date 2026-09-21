@@ -14,6 +14,7 @@ import Docs from "./pages/Docs";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Help from "./pages/HelpCenter";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 export const serverUrl = "http://localhost:8080";
 
@@ -44,6 +45,7 @@ const App = () => {
       <Route path="/interview" element={<InterviewPage />} />
       <Route path="/history" element ={<InterviewHistory />} />
       <Route path="/payment" element={<Pricing />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/report/:id" element={<InterviewReport />} />
       <Route path="/policy" element={<PrivacyPolicy />} />
       <Route path="/docs" element={<Docs />} />

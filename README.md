@@ -240,10 +240,9 @@ EMBEDDING_MODEL=text-embedding-3-small
 VECTOR_STORE_PATH=./data/faiss_index
 
 # Payments
-STRIPE_SECRET_KEY=your_stripe_secret
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
-RAZORPAY_KEY_ID=your_key
-RAZORPAY_KEY_SECRET=your_secret
+STRIPE_SECRET_KEY=your_stripe_secret
+STRIPE_MOCK=true
 ```
 
 ---

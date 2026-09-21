@@ -1,10 +1,10 @@
 import express from 'express';
 import isAuth from '../middleware/isAuth.js';
-import { createOrder, verifyPayment } from '../controllers/payment.controller.js';
+import { createCheckoutSession, verifySession } from '../controllers/payment.controller.js';
 
 const paymentRouter = express.Router();
 
-paymentRouter.post("/order", isAuth, createOrder);
-paymentRouter.post("/verify", isAuth, verifyPayment);
+paymentRouter.post("/create-checkout-session", isAuth, createCheckoutSession);
+paymentRouter.post("/verify-session", isAuth, verifySession);
 
 export default paymentRouter;

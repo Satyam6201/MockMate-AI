@@ -63,34 +63,16 @@ const Pricing = () => {
 
       const amount = plan.id === "basic" ? 100 : plan.id === "pro" ? 500 : 0;
 
-      const result = await axios.post(serverUrl + "/api/payment/order", {
+      const result = await axios.post(serverUrl + "/api/payment/create-checkout-session", {
         planId: plan.id,
         amount: amount,
         credits: plan.credits
       }, {withCredentials: true});
 
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: result.data.amount,
-        currency: "INR",
-        name: "MockMate AI",
-        description: `${plan.name} - ${plan.credits} Credits`,
-        order_id: result.data.id,
-
-        handler: async function (response) {
-          const verifypay = await axios.post(serverUrl + "/api/payment/verify", response,
-            {withCredentials: true});
-            dispatch(setUserData(verifypay.data.user));
-          alert("Payment Successful Credits Added!");
-          navigate("/");
-        },
-        theme: {
-          color: "#10b981"
-        },
+      if (result.data.url) {
+        window.location.href = result.data.url;
       }
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
       setLoadingPlan(null);
 
     } catch (error) {
