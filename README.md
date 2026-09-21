@@ -9,7 +9,6 @@
   <img src="https://img.shields.io/badge/OpenAI-GPT--4-412991?style=for-the-badge&logo=openai&logoColor=white" />
   <img src="https://img.shields.io/badge/RAG-PDF%20Powered-FF6B6B?style=for-the-badge&logo=databricks&logoColor=white" />
   <img src="https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe&logoColor=white" />
-  <img src="https://img.shields.io/badge/Razorpay-Payments-0C2451?style=for-the-badge&logo=razorpay&logoColor=white" />
 </p>
 
 <p>
@@ -57,7 +56,7 @@ Users can:
 - 🎤 Practice **Technical** or **HR** interviews
 - 📊 Receive instant **AI feedback** after every answer
 - 📈 View interview scores and performance reports
-- 💳 Purchase interview credits via **Stripe** or **Razorpay**
+- 💳 Purchase interview credits securely via **Stripe**
 
 The goal of this project is to help candidates walk into real interviews more prepared, confident, and self-aware of their gaps.
 
@@ -111,7 +110,7 @@ The AI also provides:
 - Full Performance Report
 
 ### 💳 Payment System
-Users receive interview credits after payment via **Stripe** or **Razorpay**.
+Users receive interview credits after purchasing plans securely via **Stripe Checkout**.
 
 ### 👤 User Dashboard
 - Credits balance
@@ -132,7 +131,7 @@ Fully responsive across Desktop, Tablet, and Mobile.
 | **Frontend** | ![React](https://img.shields.io/badge/-React.js-61DAFB?logo=react&logoColor=black) ![Tailwind](https://img.shields.io/badge/-TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white) ![Framer](https://img.shields.io/badge/-Framer%20Motion-0055FF?logo=framer&logoColor=white) React Router DOM · Axios · React Hot Toast · Lucide React |
 | **Backend** | ![Node](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white) ![Express](https://img.shields.io/badge/-Express.js-000000?logo=express&logoColor=white) ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white) Mongoose · JWT · Multer |
 | **AI / RAG** | ![OpenAI](https://img.shields.io/badge/-OpenAI-412991?logo=openai&logoColor=white) OpenRouter API · `text-embedding-3-small` · FAISS (vector store) · PDF.js / `pdf-parse` for extraction · LangChain-style chunking |
-| **Payments** | ![Stripe](https://img.shields.io/badge/-Stripe-635BFF?logo=stripe&logoColor=white) ![Razorpay](https://img.shields.io/badge/-Razorpay-0C2451?logo=razorpay&logoColor=white) |
+| **Payments** | ![Stripe](https://img.shields.io/badge/-Stripe-635BFF?logo=stripe&logoColor=white) |
 | **Deployment** | ![Vercel](https://img.shields.io/badge/-Vercel-000000?logo=vercel&logoColor=white) (Frontend) · ![Render](https://img.shields.io/badge/-Render-46E3B7?logo=render&logoColor=white) (Backend) · ![MongoDB Atlas](https://img.shields.io/badge/-MongoDB%20Atlas-47A248?logo=mongodb&logoColor=white) |
 
 </div>
@@ -242,7 +241,7 @@ VECTOR_STORE_PATH=./data/faiss_index
 # Payments
 STRIPE_WEBHOOK_SECRET=your_webhook_secret
 STRIPE_SECRET_KEY=your_stripe_secret
-STRIPE_MOCK=true
+STRIPE_MOCK=false
 ```
 
 ---
@@ -271,8 +270,8 @@ POST   /api/interview/finish
 
 ### Payment
 ```
-POST   /api/payment/create-order
-POST   /api/payment/verify
+POST   /api/payment/create-checkout-session
+POST   /api/payment/verify-session
 POST   /api/payment/webhook
 ```
 
@@ -294,6 +293,15 @@ POST   /api/payment/webhook
 - `embeddingVectorRefs[]`
 - `vectorStorePath`
 - `lastIndexedAt`
+
+**Payment**
+- `userId`
+- `planId`
+- `amount`
+- `credits`
+- `stripeSessionId`
+- `stripePaymentIntentId`
+- `status`
 
 ---
 
@@ -335,8 +343,8 @@ Performance Report
 ## 💳 Payment Workflow
 
 ```
-User → Choose Credits → Stripe / Razorpay
-      → Payment Success → Webhook
+User → Choose Credits → Stripe Checkout
+      → Payment Success → Webhook & Verification
       → Credits Added → Interview Available
 ```
 
@@ -366,7 +374,7 @@ This project helped in learning:
 - **RAG (Retrieval-Augmented Generation) pipeline design**
 - **Vector embeddings & vector search (FAISS)**
 - Resume Parsing & PDF Processing
-- Stripe & Razorpay Payment Integration
+- Stripe Payment Integration
 - Framer Motion · Tailwind CSS
 - File Upload · Protected Routes · Performance Optimization
 
