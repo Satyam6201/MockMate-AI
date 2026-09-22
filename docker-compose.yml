@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: mockmate-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./Backend/.env
+    restart: unless-stopped
+    networks:
+      - mockmate-network
+
+  frontend:
+    build: 
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: mockmate-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - mockmate-network
+
+networks:
+  mockmate-network:
+    driver: bridge
