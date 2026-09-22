@@ -156,8 +156,8 @@ const Footer = () => {
               {[
                 { name: "Blog", link: "/blog" },
                 { name: "Documentation", link: "/docs" },
-                { name: "Help Center", link: "/help" },
-                { name: "API Reference", link: "#" },
+                { name: "Help", link: "/help" },
+                { name: "Preparation", link: "/prepare" },
               ].map((item, idx) => (
                 <li key={idx}>
                   <Link to={item.link} onClick={scrollToTop} className="group flex items-center justify-center md:justify-start gap-2 hover:text-green-600 transition-colors">
