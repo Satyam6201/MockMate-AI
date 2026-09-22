@@ -1,426 +1,124 @@
 <div align="center">
 
-<!-- BANNER -->
-<img width="1024" height="1536" alt="image" src="https://github.com/user-attachments/assets/f98893a2-e9ae-493e-ad12-4e3f41ba313b" /> 
+# 🚀 MockMate AI: Enterprise SDE Interview Platform
 
-<!-- BADGES -->
-<p>
-  <img src="https://img.shields.io/badge/MERN-Stack-00D8FF?style=for-the-badge&logo=react&logoColor=white" />
-  <img src="https://img.shields.io/badge/OpenAI-GPT--4-412991?style=for-the-badge&logo=openai&logoColor=white" />
-  <img src="https://img.shields.io/badge/RAG-PDF%20Powered-FF6B6B?style=for-the-badge&logo=databricks&logoColor=white" />
-  <img src="https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe&logoColor=white" />
-</p>
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
 
-<p>
-  <img src="https://img.shields.io/github/stars/Satyam6201/mockmate-ai?style=social" />
-  <img src="https://img.shields.io/github/forks/Satyam6201/mockmate-ai?style=social" />
-  <img src="https://img.shields.io/github/license/Satyam6201/mockmate-ai?color=purple" />
-</p>
-
+**An highly scalable, AI-powered mock interview platform designed to help Software Engineering (SDE) candidates prepare for high-stakes technical interviews.**
 
 </div>
-
----
-
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [How RAG Powers This App](#-how-rag-retrieval-augmented-generation-powers-this-app)
-- [Folder Structure](#-folder-structure)
-- [Installation](#️-installation)
-- [Environment Variables](#-environment-variables)
-- [API Routes](#-api-routes)
-- [Database Models](#-database-models)
-- [AI + RAG Workflow](#-ai--rag-workflow)
-- [Payment Workflow](#-payment-workflow)
-- [Screens](#-screens)
-- [Future Improvements](#-future-improvements)
-- [Learning Outcomes](#-learning-outcomes)
-- [Author](#-author)
-- [License](#-license)
-- [Support](#-support)
 
 ---
 
 ## 📌 Overview
 
-**MockMate AI** is a full-stack **MERN** application that simulates a real interview experience end-to-end.
+**MockMate AI** simulates a real-world technical interview experience. Users can upload their resumes, and the AI (powered by a Retrieval-Augmented Generation / RAG pipeline) generates highly personalized, hallucination-resistant interview questions. 
 
-Users can:
-
-- 📄 Upload their resume (PDF)
-- 🧠 Let the AI **read, chunk, and embed** their resume using a **RAG (Retrieval-Augmented Generation)** pipeline
-- 🎯 Generate **personalized** AI interview questions grounded in their actual resume content
-- 🎤 Practice **Technical** or **HR** interviews
-- 📊 Receive instant **AI feedback** after every answer
-- 📈 View interview scores and performance reports
-- 💳 Purchase interview credits securely via **Stripe**
-
-The goal of this project is to help candidates walk into real interviews more prepared, confident, and self-aware of their gaps.
-
----
-
-## 🚀 Senior Engineer Architectural Upgrades (New)
-
-MockMate AI has recently been scaled into a highly robust, enterprise-grade distributed system capable of handling millions of concurrent users:
-
-* **⚡ Node.js Cluster Scaling**: The backend automatically forks a worker process for every CPU core on the host machine, balancing massive traffic loads and enabling zero-downtime self-healing.
-* **🚦 Nginx Load Balancer (API Gateway)**: All incoming API requests are intelligently routed across the backend replicas using a `least_conn` strategy inside Docker Compose.
-* **🛡️ Distributed Redis Rate Limiting**: Shifted rate-limiting from local RAM to an isolated Redis instance (`rate-limit-redis`) to enforce security limits universally across all clustered workers.
-* **🔒 Enterprise Security**: Hardened with **Helmet.js** (HTTP security headers) and **Express Mongo Sanitize** (stripping malicious NoSQL injection payloads).
-* **🧪 CI/CD & Automated Testing**: Features a GitHub Actions pipeline and a full **Jest/Supertest** automated unit testing suite for backend validation.
-* **⚡ React Code Splitting**: Frontend optimized with `React.lazy()` and `<Suspense>` to massively cut initial bundle sizes and boost Google Lighthouse scores.
-* **📚 SDE Preparation Hub**: A fully interactive library containing 100+ meticulously categorized technical questions (HLD, LLD, OS, CN, DBMS, DSA) filtered by role level (SDE-1, SDE-2, SDE-3) with animated, drop-down answer reveals.
+Beyond standard mock interviews, this application features a dedicated **SDE Preparation Hub** filled with Senior-level architecture questions, strict **Anti-Cheat Proctoring**, and an **Enterprise-Grade Distributed Backend** designed to handle millions of concurrent users.
 
 ---
 
 ## ✨ Features
 
-### 🔐 Authentication
-- User Registration & Login
-- JWT Authentication
-- Protected Routes
-
-### 📄 Resume Analysis (RAG-Powered)
-Users upload a resume in PDF format. Instead of a single blind prompt to an LLM, the resume is:
-1. Parsed into raw text
-2. Split into semantic chunks
-3. Converted into vector embeddings
-4. Stored in a vector index for **retrieval-augmented** question generation
-
-The AI extracts and grounds its output in:
-- Role & Seniority
-- Experience
-- Skills
-- Projects
-
-This retrieved context is then used to generate **highly personalized**, hallucination-resistant interview questions.
-
-### 🤖 AI Question Generation
-Questions are generated using **OpenAI GPT models**, augmented with retrieved resume context (RAG), based on:
-- Resume content (retrieved chunks)
-- Skills & Projects
-- Experience level
-- Selected Role
-- Interview Type (Technical / HR)
-
-### 🎤 AI Interview
-- 5 AI-generated questions per session
-- Timer for every question
-- Answer submission
-- Instant AI evaluation
-
-### 📊 AI Feedback
-Every answer is evaluated by OpenAI on:
-- Confidence
-- Communication
-- Correctness (cross-checked against retrieved resume context)
-
-The AI also provides:
-- Final Score
-- Short Feedback
-- Full Performance Report
-
-### 💳 Payment System
-Users receive interview credits after purchasing plans securely via **Stripe Checkout**.
-
-### 👤 User Dashboard
-- Credits balance
-- Interview History
-- Previous Scores & Performance trends
-
-### 📱 Responsive UI
-Fully responsive across Desktop, Tablet, and Mobile.
+* **🧠 AI-Powered RAG Interviews**: Upload your PDF resume. The system extracts the text, chunks it, stores vector embeddings, and grounds the OpenAI GPT models in your actual experience to generate relevant questions and evaluate your answers.
+* **📚 SDE Preparation Hub**: A fully interactive library containing 100+ meticulously categorized technical questions (HLD, LLD, OS, CN, DBMS, DSA) filtered by role level (SDE-1, SDE-2, SDE-3) with animated, drop-down answer reveals.
+* **🛡️ Anti-Cheat Proctoring**: Utilizes the Page Visibility API to detect tab-switching and enforce strict exam environments during the mock interview.
+* **💳 Secure Payments**: Fully integrated with Stripe Checkout for premium credit purchases.
+* **⚡ Blazing Fast UI**: Built with React, Tailwind CSS, and Framer Motion for buttery-smooth stagger animations. Code-split using `React.lazy()` for instant initial load times.
 
 ---
 
-## 🛠 Tech Stack
+## 🏗️ How This Website Works (Enterprise Architecture)
 
-<div align="center">
+This application is built using advanced **System Design** principles to ensure it is secure, highly available, and horizontally scalable.
+
+### 1. The Gateway Layer (Nginx & Docker)
+All incoming web traffic hits an **Nginx Reverse Proxy**. Nginx acts as an API gateway and Load Balancer. Running inside a **Docker Compose** network, Nginx uses a `least_conn` routing algorithm to dynamically distribute traffic across multiple isolated Backend container replicas.
+
+### 2. The Compute Cluster (Node.js & Express)
+The backend isn't just a standard Node.js server. It utilizes the native Node.js `cluster` module to fork a worker process for every CPU core available on the host machine. 
+* *Why?* Standard Node.js is single-threaded. By clustering, if a machine has 8 CPU cores, we run 8 simultaneous Express servers that share the same port, multiplying our throughput by 8x and providing zero-downtime self-healing if a worker crashes.
+
+### 3. Distributed State & Rate Limiting (Redis)
+To protect the server from DDoS attacks and brute-force logins, the backend enforces strict rate limits. Because our backend is clustered across multiple CPU cores (and Docker containers), local memory rate-limiting would fail. Instead, all rate limits are synchronized globally in microseconds using an external **Redis** instance.
+
+### 4. The Data Layer (MongoDB Atlas)
+User data, interview history, and vector embeddings are stored in MongoDB. The backend initiates a robust **Connection Pool** (`maxPoolSize: 200`, `minPoolSize: 20`) to safely queue and handle massive traffic spikes without establishing thousands of expensive individual TCP connections and crashing the database daemon.
+
+### 5. Enterprise Security Hardening
+The API is strictly fortified using:
+* **Helmet.js**: Injects crucial HTTP headers to protect against Cross-Site Scripting (XSS), Sniffing, and Clickjacking.
+* **Express Mongo Sanitize**: Actively intercepts incoming JSON payloads and strips out malicious MongoDB operators (like `$` and `.`), preventing dangerous NoSQL Injection attacks.
+
+---
+
+## 🛠️ Technology Stack
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | ![React](https://img.shields.io/badge/-React.js-61DAFB?logo=react&logoColor=black) ![Tailwind](https://img.shields.io/badge/-TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white) ![Framer](https://img.shields.io/badge/-Framer%20Motion-0055FF?logo=framer&logoColor=white) React Router DOM · Axios · React Hot Toast · Lucide React |
-| **Backend** | ![Node](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white) ![Express](https://img.shields.io/badge/-Express.js-000000?logo=express&logoColor=white) ![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white) Mongoose · JWT · Multer |
-| **AI / RAG** | ![OpenAI](https://img.shields.io/badge/-OpenAI-412991?logo=openai&logoColor=white) OpenRouter API · `text-embedding-3-small` · FAISS (vector store) · PDF.js / `pdf-parse` for extraction · LangChain-style chunking |
-| **Payments** | ![Stripe](https://img.shields.io/badge/-Stripe-635BFF?logo=stripe&logoColor=white) |
-| **Deployment** | ![Vercel](https://img.shields.io/badge/-Vercel-000000?logo=vercel&logoColor=white) (Frontend) · ![Render](https://img.shields.io/badge/-Render-46E3B7?logo=render&logoColor=white) (Backend) · ![MongoDB Atlas](https://img.shields.io/badge/-MongoDB%20Atlas-47A248?logo=mongodb&logoColor=white) |
-
-</div>
+| **Frontend** | React.js (Vite), TailwindCSS, Framer Motion, Redux Toolkit, React Router (Lazy Loaded), Recharts, jsPDF |
+| **Backend** | Node.js (Cluster Module), Express.js, MongoDB (Mongoose), JWT, Multer |
+| **Caching & Security** | Redis, Express-Rate-Limit, Helmet.js, Express-Mongo-Sanitize |
+| **AI / RAG** | OpenAI GPT Models, `text-embedding-3-small`, FAISS (vector store), pdf-parse |
+| **DevOps & QA** | Docker, Docker Compose, Nginx, GitHub Actions (CI/CD), Jest & Supertest (Unit Testing), k6 (Load Testing) |
 
 ---
 
-## 🧠 How RAG (Retrieval-Augmented Generation) Powers This App
+## ⚙️ Getting Started (Local Development)
 
-Rather than dumping an entire resume into a single prompt (which is costly, hallucination-prone, and truncates on long resumes), MockMate AI uses a proper **RAG pipeline**:
+The entire distributed architecture can be run locally using Docker Compose.
 
-```mermaid
-flowchart TD
-    A[📄 PDF Resume Upload] --> B[Text Extraction<br/>pdf-parse / PDF.js]
-    B --> C[Chunking<br/>~500 token chunks w/ overlap]
-    C --> D[Embedding Generation<br/>OpenAI text-embedding-3-small]
-    D --> E[(Vector Store<br/>FAISS Index)]
-    F[User selects Role + Interview Type] --> G[Query Vector Store<br/>Top-k relevant chunks]
-    E --> G
-    G --> H[Construct Grounded Prompt<br/>Context + Role + Type]
-    H --> I[OpenAI GPT Model]
-    I --> J[Personalized Interview Questions]
-```
+### 1. Prerequisites
+* **Docker & Docker Compose** installed on your machine.
+* A `.env` file inside the `Backend/` directory populated with your credentials:
+  ```env
+  PORT=8080
+  MONGODB_URL=your_mongodb_url
+  JWT_SECRET=your_jwt_secret
+  OPENAI_API_KEY=your_openai_key
+  STRIPE_SECRET_KEY=your_stripe_secret
+  ```
 
-**Why RAG instead of a plain prompt?**
-- ✅ Keeps prompts small & cost-efficient (only relevant chunks are sent)
-- ✅ Reduces hallucination — questions are grounded in *actual* resume content
-- ✅ Scales to long, multi-page resumes without truncation
-- ✅ Makes answer evaluation more accurate, since feedback can cross-reference the same retrieved context
-
----
-
-## 📂 Folder Structure
-
-```
-MockMate-AI
-│
-├── Frontend
-│   ├── src
-│   │   ├── components
-│   │   ├── pages
-│   │   ├── context
-│   │   └── assets
-│   ├── App.jsx
-│   └── main.jsx
-│
-├── Backend
-│   ├── controllers
-│   ├── middleware
-│   ├── model
-│   ├── routes
-│   ├── services
-│   └── ai/
-│   │   ├── generateQuestions.js
-│   │   └── evaluateAnswer.js
-│   ├── config
-│   ├── utils
-│   └── index.js
-│
-└── README.md
-```
-
----
-
-## ⚙️ Installation
-
-### Clone Repository
+### 2. Launching the Cluster
+Clone the repository and run the Docker build command. This will spin up Redis, the Nginx Load Balancer, the Frontend, and 3 replicated Backend Node clusters.
 ```bash
 git clone https://github.com/Satyam6201/mockmate-ai.git
 cd mockmate-ai
+docker-compose up -d --build
 ```
+Navigate to `http://localhost:3000` to view the application!
 
-### Frontend Setup
-```bash
-cd Frontend
-npm install
-npm run dev
-```
-Runs on → `http://localhost:5173`
+### 3. Automated Testing
+This project embraces Test-Driven Development (TDD) and CI/CD validation. 
 
-### Backend Setup
+**Run Unit Tests (Jest & Supertest):**
 ```bash
 cd Backend
-npm install
-npm run dev
+npm run test
 ```
-Runs on → `http://localhost:8080`
 
----
-
-## 🔑 Environment Variables
-
-Create a `.env` file inside `Backend/`:
-
-```env
-PORT=8080
-
-MONGODB_URI=your_mongodb_url
-
-JWT_SECRET=your_jwt_secret
-
-# AI / RAG
-OPENAI_API_KEY=your_openai_key
-OPENROUTER_API_KEY=your_openrouter_key
-EMBEDDING_MODEL=text-embedding-3-small
-VECTOR_STORE_PATH=./data/faiss_index
-
-# Payments
-STRIPE_WEBHOOK_SECRET=your_webhook_secret
-STRIPE_SECRET_KEY=your_stripe_secret
-STRIPE_MOCK=false
+**Run Automated Load Tests (k6):**
+```bash
+k6 run load-test.js
 ```
 
 ---
 
-## 🔌 API Routes
-
-### Authentication
-```
-POST   /api/auth/register
-POST   /api/auth/login
-GET    /api/auth/profile
-```
-
-### Resume (RAG)
-```
-POST   /api/interview/resume            # upload + extract + chunk + embed
-GET    /api/interview/resume/status     # check embedding/indexing status
-```
-
-### Interview
-```
-POST   /api/interview/generate-questions   # RAG-grounded question generation
-POST   /api/interview/submit-answer
-POST   /api/interview/finish
-```
-
-### Payment
-```
-POST   /api/payment/create-checkout-session
-POST   /api/payment/verify-session
-POST   /api/payment/webhook
-```
-
----
-
-## 🗄 Database Models
-
-**User**
-- Name, Email, Password, Credits
-
-**Interview**
-- Role, Experience, Interview Mode
-- Questions, Answers, Feedback
-- Score, Status
-
-**ResumeIndex** *(new — supports RAG)*
-- `userId`
-- `chunks[]` (text + metadata)
-- `embeddingVectorRefs[]`
-- `vectorStorePath`
-- `lastIndexedAt`
-
-**Payment**
-- `userId`
-- `planId`
-- `amount`
-- `credits`
-- `stripeSessionId`
-- `stripePaymentIntentId`
-- `status`
-
----
-
-## 🔄 AI + RAG Workflow
-
-```
-User Uploads Resume (PDF)
-        │
-        ▼
-Extract Resume Text (pdf-parse)
-        │
-        ▼
-Chunk Text (semantic, ~500 tokens)
-        │
-        ▼
-Generate Embeddings (OpenAI)
-        │
-        ▼
-Store in Vector Index (FAISS)
-        │
-        ▼
-Retrieve Top-K Relevant Chunks (per role/type)
-        │
-        ▼
-Construct Grounded Prompt → OpenAI GPT
-        │
-        ▼
-Generate Interview Questions
-        │
-        ▼
-User Answers → AI Evaluation (context-aware)
-        │
-        ▼
-Performance Report
-```
-
----
-
-## 💳 Payment Workflow
-
-```
-User → Choose Credits → Stripe Checkout
-      → Payment Success → Webhook & Verification
-      → Credits Added → Interview Available
-```
-
----
-
-## 🚀 Future Improvements
-
-- 🎥 Video Interview
-- 🗣 Voice Recognition & Speech Analysis
-- 🧑‍💻 AI Avatar Interviewer
-- 🏢 Company-wise Interview Sets
-- 💻 Coding Editor + Live Code Execution
-- 🏆 Leaderboard
-- 🌙 Dark Mode
-- 📜 Certificate Generation
-- 📧 Email Reports
-- 🔍 Hybrid Search (keyword + vector) for resume retrieval
-
----
-
-## 📚 Learning Outcomes
-
-This project helped in learning:
-
-- React.js · Express.js · MongoDB · JWT Authentication · REST APIs
-- **AI Integration with OpenAI**
-- **RAG (Retrieval-Augmented Generation) pipeline design**
-- **Vector embeddings & vector search (FAISS)**
-- Resume Parsing & PDF Processing
-- Stripe Payment Integration
-- Framer Motion · Tailwind CSS
-- File Upload · Protected Routes · Performance Optimization
+## 🧪 CI/CD Pipeline
+Code quality is strictly enforced via **GitHub Actions**. Upon every Pull Request, a cloud Ubuntu runner is provisioned to install dependencies, run security audits, and verify Docker compilation to ensure no broken code is ever merged into the `main` branch.
 
 ---
 
 ## 👤 Author
-
-<div align="center">
-
-### Satyam Kumar Mishra
-**Full Stack MERN Developer**
-
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Satyam6201)
-[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://satyam-devfolio.vercel.app/)
+**Satyam Kumar Mishra**  
+Full Stack MERN Developer  
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/satyam-kumar-mishra-dev)
 
-</div>
-
----
-
 ## 📄 License
-
-This project is developed for learning and portfolio purposes.
-Feel free to use and improve it.
-
----
-
-## ⭐ Support
-
-If you found this project helpful, please give this repository a **⭐ on GitHub**.
-It motivates me to build more open-source projects.
-
-<div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:8B5CF6,100:6366F1&height=100&section=footer" width="100%"/>
-</div>
+This project is developed for learning, portfolio purposes, and open-source contributions. Feel free to use and improve it!
