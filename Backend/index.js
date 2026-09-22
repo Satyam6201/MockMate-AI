@@ -8,6 +8,8 @@ import userRouter from "./router/user.route.js";
 import interviewRouter from "./router/interview.router.js";
 import paymentRouter from "./router/payment.route.js";
 import { stripeWebhook } from "./controllers/payment.controller.js";
+import { globalLimiter } from "./middleware/rateLimit.js";
+
 dotenv.config();
 
 const app = express();
@@ -22,6 +24,9 @@ app.post("/api/payment/webhook", express.raw({ type: 'application/json' }), stri
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Apply global rate limiting to all requests
+app.use(globalLimiter);
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);

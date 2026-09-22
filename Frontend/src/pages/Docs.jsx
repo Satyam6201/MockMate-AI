@@ -1,77 +1,127 @@
 import React from 'react';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaBookOpen, FaCoins, FaMicrophoneAlt, FaChartBar, FaRocket } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Docs = () => {
     const navigate = useNavigate();
     
     const containerVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.1 } }
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
     };
     
     const itemVariants = {
-        hidden: { opacity: 0, x: -10 },
-        visible: { opacity: 1, x: 0 }
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
     };
 
-    return (
-        <div className='min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50 p-6 md:p-12'>
-            <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/")} 
-                className='mb-6 p-3 rounded-full bg-white shadow-md hover:shadow-lg transition text-emerald-600'
-            >
-                <FaArrowLeft />
-            </motion.button>
-            <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className='max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-xl'
-            >
-                <motion.h1 variants={itemVariants} className='text-4xl font-extrabold text-gray-800 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500'>
-                    Documentation
-                </motion.h1>
-                <motion.p variants={itemVariants} className='text-lg text-gray-600 mb-8 border-b pb-6'>
-                    Welcome to MockMate AI! Our platform helps you practice for job interviews using advanced AI.
-                </motion.p>
-                
-                <motion.div variants={itemVariants} className='mb-8'>
-                    <h2 className='text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2'>
-                        <span className='bg-emerald-100 text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center text-sm'>1</span>
-                        Getting Started
-                    </h2>
-                    <p className='text-gray-600 ml-10'>Sign in using your Google account. New users receive initial credits to try out the platform.</p>
-                </motion.div>
-                
-                <motion.div variants={itemVariants} className='mb-8'>
-                    <h2 className='text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2'>
-                        <span className='bg-emerald-100 text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center text-sm'>2</span>
-                        Interview Credits
-                    </h2>
-                    <p className='text-gray-600 ml-10'>Each AI interview costs credits. You can easily refill your balance from the Pricing page securely via Stripe.</p>
-                </motion.div>
+    const docSections = [
+        {
+            icon: <FaRocket />,
+            title: "Getting Started",
+            desc: "Sign in using your Google account. New users receive initial free credits to try out the platform and experience the AI intelligence immediately."
+        },
+        {
+            icon: <FaCoins />,
+            title: "Interview Credits",
+            desc: "Each AI interview costs credits. You can easily refill your balance from the Pricing page securely via Stripe. Your credits never expire."
+        },
+        {
+            icon: <FaMicrophoneAlt />,
+            title: "Taking an Interview",
+            desc: "Click 'Start Interview', fill in your target role, optionally upload your resume, and enable your microphone. Converse naturally with our AI just like a real interview!"
+        },
+        {
+            icon: <FaChartBar />,
+            title: "Reviewing Feedback",
+            desc: "After finishing, you will get a detailed performance report with scores for Confidence, Communication, and Correctness, along with actionable areas to improve."
+        }
+    ];
 
-                <motion.div variants={itemVariants} className='mb-8'>
-                    <h2 className='text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2'>
-                        <span className='bg-emerald-100 text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center text-sm'>3</span>
-                        Taking an Interview
-                    </h2>
-                    <p className='text-gray-600 ml-10'>Click 'Start Interview', enable your microphone, and converse naturally with our AI. It works just like a real interview!</p>
-                </motion.div>
-                
-                <motion.div variants={itemVariants}>
-                    <h2 className='text-2xl font-bold text-gray-800 mb-3 flex items-center gap-2'>
-                        <span className='bg-emerald-100 text-emerald-600 w-8 h-8 rounded-full flex items-center justify-center text-sm'>4</span>
-                        Reviewing Feedback
-                    </h2>
-                    <p className='text-gray-600 ml-10'>After finishing, you will get a detailed performance report with scores, strengths, and areas to improve.</p>
-                </motion.div>
-            </motion.div>
+    return (
+        <div className='min-h-screen bg-gray-50 flex flex-col font-sans overflow-hidden'>
+            <Navbar />
+            
+            <div className='flex-1 relative py-12 px-4 sm:px-6'>
+                {/* Decorative background blur elements */}
+                <div className='absolute top-20 left-10 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse'></div>
+                <div className='absolute bottom-40 right-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-1000'></div>
+
+                <div className='max-w-5xl mx-auto relative z-10'>
+                    <div className='mb-8 flex items-center gap-4'>
+                        <motion.button 
+                            whileHover={{ scale: 1.05, x: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate("/")} 
+                            className='p-4 rounded-full bg-white shadow-sm hover:shadow-md border border-gray-100 transition-all text-gray-600'
+                        >
+                            <FaArrowLeft />
+                        </motion.button>
+                        <div>
+                            <h1 className='text-3xl sm:text-4xl font-extrabold text-gray-900 flex items-center gap-3'>
+                                <FaBookOpen className='text-green-600' /> Documentation
+                            </h1>
+                            <p className='text-gray-500 mt-1 font-medium'>Everything you need to know about MockMate AI</p>
+                        </div>
+                    </div>
+
+                    <motion.div 
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className='bg-white p-8 sm:p-12 rounded-[2.5rem] shadow-xl border border-gray-100'
+                    >
+                        <motion.p variants={itemVariants} className='text-lg sm:text-xl text-gray-600 mb-12 leading-relaxed border-b border-gray-100 pb-10'>
+                            Welcome to the <strong className='text-gray-900'>MockMate AI</strong> help center. Our platform is designed to seamlessly prepare you for your dream job using advanced conversational AI and real-time performance analytics. Follow the guide below to master the platform.
+                        </motion.p>
+                        
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+                            {docSections.map((section, index) => (
+                                <motion.div 
+                                    key={index} 
+                                    variants={itemVariants} 
+                                    whileHover={{ y: -5 }}
+                                    className='bg-gray-50 hover:bg-white p-8 rounded-3xl border border-gray-100 hover:border-green-200 transition-all shadow-sm hover:shadow-lg group'
+                                >
+                                    <div className='flex items-center gap-4 mb-5'>
+                                        <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center text-xl shadow-md group-hover:scale-110 transition-transform'>
+                                            {section.icon}
+                                        </div>
+                                        <h2 className='text-xl font-bold text-gray-900'>
+                                            {section.title}
+                                        </h2>
+                                    </div>
+                                    <p className='text-gray-600 leading-relaxed font-medium'>
+                                        {section.desc}
+                                    </p>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        <motion.div variants={itemVariants} className='mt-12 bg-green-50 border border-green-200 rounded-3xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6'>
+                            <div>
+                                <h3 className='text-xl font-bold text-green-900 mb-2'>Still need help?</h3>
+                                <p className='text-green-700'>If you couldn't find what you were looking for, reach out to our support team.</p>
+                            </div>
+                            <motion.button 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate("/contact")}
+                                className='bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition-colors whitespace-nowrap'
+                            >
+                                Contact Support
+                            </motion.button>
+                        </motion.div>
+
+                    </motion.div>
+                </div>
+            </div>
+            <Footer />
         </div>
     )
 }
+
 export default Docs;
