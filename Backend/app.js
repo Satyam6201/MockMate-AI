@@ -7,6 +7,7 @@ import authRouter from "./router/auth.route.js";
 import userRouter from "./router/user.route.js";
 import interviewRouter from "./router/interview.router.js";
 import paymentRouter from "./router/payment.route.js";
+import chatbotRouter from "./router/chatbot.route.js";
 import { stripeWebhook } from "./controllers/payment.controller.js";
 import { globalLimiter } from "./middleware/rateLimit.js";
 
@@ -34,6 +35,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/interview", interviewRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/chatbot", chatbotRouter);
 
 // Global 404 Handler for undefined API routes
 app.use("*", (req, res) => {

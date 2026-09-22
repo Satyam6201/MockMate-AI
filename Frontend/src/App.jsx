@@ -20,6 +20,7 @@ const Help = lazy(() => import("./pages/HelpCenter"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Preparation = lazy(() => import("./pages/Preparation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+import Chatbot from "./components/Chatbot";
 
 export const serverUrl = "http://localhost:8080";
 
@@ -46,6 +47,7 @@ const App = () => {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000, style: { borderRadius: '10px', background: '#333', color: '#fff' } }} />
+      <Chatbot />
       <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600"></div>

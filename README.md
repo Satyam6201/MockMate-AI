@@ -476,9 +476,10 @@ The backend relies on the following environment variables. Do NOT commit these t
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `PORT` | The port the Express workers listen on | `8080` |
-| `MONGODB_URL` | MongoDB Atlas Connection String | `********` |
+| `MONGODB_URL` | MongoDB Atlas Connection String | `mongodb+srv://admin:pass@cluster.mongodb.net/mockmate` |
 | `JWT_SECRET` | Cryptographic key for signing cookies | `super_secret_jwt_key_992` |
 | `OPENAI_API_KEY` | API key for GPT and Embedding models | `sk-proj-...` |
+| `GEMINI_API_KEY` | Google Gemini API key for Chatbot | `AIzaSy...` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `STRIPE_SECRET_KEY` | Stripe secret for generating sessions | `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | Secret to verify Stripe events | `whsec_...` |
