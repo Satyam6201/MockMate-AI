@@ -15,6 +15,7 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Help from "./pages/HelpCenter";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import { Toaster } from "react-hot-toast";
 
 export const serverUrl = "http://localhost:8080";
 
@@ -39,20 +40,23 @@ const App = () => {
   }, [dispatch]);
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/interview" element={<InterviewPage />} />
-      <Route path="/history" element ={<InterviewHistory />} />
-      <Route path="/payment" element={<Pricing />} />
-      <Route path="/payment-success" element={<PaymentSuccess />} />
-      <Route path="/report/:id" element={<InterviewReport />} />
-      <Route path="/policy" element={<PrivacyPolicy />} />
-      <Route path="/docs" element={<Docs />} />
-      <Route path="/blog" element={<Blog />} />
-      <Route path="/help" element={<Help />} /> 
-      <Route path="/contact" element={<Contact />} /> 
-    </Routes>
+    <>
+      <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000, style: { borderRadius: '10px', background: '#333', color: '#fff' } }} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/interview" element={<InterviewPage />} />
+        <Route path="/history" element ={<InterviewHistory />} />
+        <Route path="/payment" element={<Pricing />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/report/:id" element={<InterviewReport />} />
+        <Route path="/policy" element={<PrivacyPolicy />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/help" element={<Help />} /> 
+        <Route path="/contact" element={<Contact />} /> 
+      </Routes>
+    </>
   )
 }
 

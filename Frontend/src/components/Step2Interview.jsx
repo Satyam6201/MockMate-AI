@@ -2,15 +2,17 @@ import maleVideo from '../assets/Videos/male-ai.mp4'
 import femaleVideo from '../assets/Videos/female-ai.mp4'
 import Timer from './Timer'
 import { motion, AnimatePresence } from 'motion/react'
-import { FaMicrophone, FaMicrophoneSlash, FaLightbulb, FaRobot } from 'react-icons/fa'
+import { FaMicrophone, FaMicrophoneSlash, FaLightbulb, FaRobot, FaExclamationTriangle } from 'react-icons/fa'
 import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { serverUrl } from '../App'
 import { BsArrowRight, BsStars } from 'react-icons/bs'
+import toast from 'react-hot-toast'
 
 const Step2Interview = ({interviewData, onFinish}) => {
 
   const {interviewId, questions, userName} = interviewData;
+  const [warningsCount, setWarningsCount] = useState(0);
   const [isIntroPhase, setIsIntroPhase] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
   const recognitionRef = useRef(null);
@@ -269,7 +271,39 @@ const Step2Interview = ({interviewData, onFinish}) => {
       }
       window.speechSynthesis.cancel();
     }
-  }, [])
+  }, []);
+
+  // Proctoring / Anti-Cheat System
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setWarningsCount((prev) => prev + 1);
+        toast.error("Warning: Please do not switch tabs during the interview!", {
+          icon: '⚠️',
+          duration: 5000,
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  // Real-time Answer Quality Analysis (Word Count)
+  const wordCount = answer.trim().split(/\s+/).filter(w => w.length > 0).length;
+  let answerQualityColor = "bg-red-500";
+  let answerQualityText = "Too Short (Need more details)";
+  let answerQualityProgress = Math.min((wordCount / 50) * 100, 100);
+
+  if (wordCount >= 50) {
+    answerQualityColor = "bg-green-500";
+    answerQualityText = "Excellent Depth";
+  } else if (wordCount >= 20) {
+    answerQualityColor = "bg-yellow-500";
+    answerQualityText = "Good, but could add examples";
+  }
 
   return (
     <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans'>
@@ -384,16 +418,38 @@ const Step2Interview = ({interviewData, onFinish}) => {
           </AnimatePresence>
 
           {/* Pro Tip block */}
-          <div className='flex items-center gap-3 mb-4 text-sm text-gray-500'>
-            <FaLightbulb className='text-yellow-500' />
-            <span>Speak clearly into the microphone. You can type if preferred.</span>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='flex items-center gap-3 text-sm text-gray-500'>
+              <FaLightbulb className='text-yellow-500' />
+              <span>Speak clearly into the microphone. You can type if preferred.</span>
+            </div>
+            
+            {warningsCount > 0 && (
+              <div className="flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                <FaExclamationTriangle /> {warningsCount} Tab Switch Warning{warningsCount > 1 ? 's' : ''}
+              </div>
+            )}
           </div>
 
-          <textarea placeholder={isMicOn && !isAIPlaying ? 'Listening... Speak now or type here.' : 'Type your answer here...'}
-           onChange={(e) => setAnswer(e.target.value)} value={answer}
-            className={`flex-1 min-h-[150px] bg-gray-50 p-6 rounded-3xl resize-none outline-none border-2 transition-all text-gray-800 text-lg shadow-inner
-            ${isMicOn && !isAIPlaying ? 'border-green-200 bg-green-50/30' : 'border-gray-200 focus:border-green-400'}`} 
-          /> 
+          <div className="relative flex-1 flex flex-col">
+            <textarea placeholder={isMicOn && !isAIPlaying ? 'Listening... Speak now or type here.' : 'Type your answer here...'}
+             onChange={(e) => setAnswer(e.target.value)} value={answer}
+              className={`flex-1 min-h-[150px] bg-gray-50 p-6 pb-12 rounded-3xl resize-none outline-none border-2 transition-all text-gray-800 text-lg shadow-inner
+              ${isMicOn && !isAIPlaying ? 'border-green-200 bg-green-50/30' : 'border-gray-200 focus:border-green-400'}`} 
+            /> 
+            
+            {/* Real-time Word Count Analyzer */}
+            {!feedback && (
+              <div className="absolute bottom-4 left-6 right-6 flex items-center gap-4">
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className={`h-full transition-all duration-300 ${answerQualityColor}`} style={{ width: `${answerQualityProgress}%` }}></div>
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-wider ${answerQualityColor.replace('bg-', 'text-')}`}>
+                  {wordCount} Words ({answerQualityText})
+                </span>
+              </div>
+            )}
+          </div>
 
           {!feedback ? (
             <div className='flex items-center gap-4 mt-8'> 

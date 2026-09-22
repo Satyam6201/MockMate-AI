@@ -1,4 +1,4 @@
-import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaDownload } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaExclamationTriangle, FaDownload, FaShareAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react'
 import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
@@ -6,6 +6,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { jsPDF } from "jspdf";
 import { autoTable } from 'jspdf-autotable'
+import toast from 'react-hot-toast';
 
 const Step3Report = ({report}) => {
   const navigate = useNavigate();
@@ -153,6 +154,21 @@ const Step3Report = ({report}) => {
     });
 
     doc.save("AI_Interview_Report.pdf");
+    toast.success("PDF Downloaded Successfully!");
+  };
+
+  const shareReport = () => {
+    const shareText = `I just scored a ${finalScore}/10 on my AI Mock Interview at MockMate AI! \n\nPerformance: ${performanceText}\n\nCan you beat my score? Try it out!`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'My MockMate AI Score',
+        text: shareText,
+        url: window.location.href,
+      }).catch(err => console.log('Share failed:', err));
+    } else {
+      navigator.clipboard.writeText(shareText + " " + window.location.href);
+      toast.success("Score copied to clipboard! Share it anywhere.");
+    }
   };
 
   const containerVariants = {
@@ -186,13 +202,23 @@ const Step3Report = ({report}) => {
           </div>
         </div>
 
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={downloadPDF}
-          className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white py-3 px-8 rounded-full shadow-lg font-bold transition-colors">
-          <FaDownload /> Download PDF
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={shareReport}
+            className="flex items-center gap-2 bg-white text-gray-700 hover:text-green-600 border border-gray-200 py-3 px-6 rounded-full shadow-sm font-bold transition-colors">
+            <FaShareAlt /> Share Score
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={downloadPDF}
+            className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white py-3 px-8 rounded-full shadow-lg font-bold transition-colors">
+            <FaDownload /> Download PDF
+          </motion.button>
+        </div>
       </div>
 
       <motion.div 
