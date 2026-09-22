@@ -15,6 +15,8 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import Help from "./pages/HelpCenter";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Preparation from "./pages/Preparation";
+import NotFound from "./pages/NotFound";
 import { Toaster } from "react-hot-toast";
 
 export const serverUrl = "http://localhost:8080";
@@ -55,6 +57,10 @@ const App = () => {
         <Route path="/blog" element={<Blog />} />
         <Route path="/help" element={<Help />} /> 
         <Route path="/contact" element={<Contact />} /> 
+        <Route path="/prepare" element={<Preparation />} /> 
+        
+        {/* Catch-all route for unmapped paths (404 Error Handling) */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   )
