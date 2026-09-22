@@ -1,0 +1,72 @@
+name: MockMate AI CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test-backend:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./Backend
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: './Backend/package-lock.json'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    # In a real environment, you would run tests here
+    # - name: Run Tests
+    #   run: npm test
+
+  build-and-test-frontend:
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./Frontend
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: './Frontend/package-lock.json'
+
+    - name: Install Dependencies
+      run: npm ci
+
+    - name: Build React App
+      run: npm run build
+      
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    needs: [build-and-test-backend, build-and-test-frontend]
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Test Docker Compose Build
+      run: docker-compose build

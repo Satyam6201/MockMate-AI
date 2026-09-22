@@ -1,41 +1,30 @@
-import express from "express";
 import dotenv from "dotenv";
 import db from "./config/db.js";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import authRouter from "./router/auth.route.js";
-import userRouter from "./router/user.route.js";
-import interviewRouter from "./router/interview.router.js";
-import paymentRouter from "./router/payment.route.js";
-import { stripeWebhook } from "./controllers/payment.controller.js";
-import { globalLimiter } from "./middleware/rateLimit.js";
+import cluster from "cluster";
+import os from "os";
+import app from "./app.js";
 
 dotenv.config();
 
-const app = express();
+const numCPUs = os.cpus().length;
 
-app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
-}));
+if (cluster.isPrimary) {
+    console.log(`Primary ${process.pid} is running`);
+    console.log(`Setting up ${numCPUs} workers to handle high scale load...`);
 
-// Stripe webhook must use raw body parser
-app.post("/api/payment/webhook", express.raw({ type: 'application/json' }), stripeWebhook);
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
 
-app.use(express.json());
-app.use(cookieParser());
+    cluster.on("exit", (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died. Spawning a new one...`);
+        cluster.fork();
+    });
+} else {
+    const PORT = process.env.PORT || 8000;
 
-// Apply global rate limiting to all requests
-app.use(globalLimiter);
-
-app.use("/api/auth", authRouter);
-app.use("/api/user", userRouter);
-app.use("/api/interview", interviewRouter);
-app.use("/api/payment", paymentRouter);
-
-const PORT = process.env.PORT || 8000;
-
-app.listen(PORT, ()=> {
-    console.log(`Server is running on ${PORT}`);
-    db();
-})
+    app.listen(PORT, ()=> {
+        console.log(`Worker ${process.pid} started and listening on ${PORT}`);
+        db(); 
+    });
+}

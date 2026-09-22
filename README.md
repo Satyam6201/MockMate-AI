@@ -62,6 +62,20 @@ The goal of this project is to help candidates walk into real interviews more pr
 
 ---
 
+## 🚀 Senior Engineer Architectural Upgrades (New)
+
+MockMate AI has recently been scaled into a highly robust, enterprise-grade distributed system capable of handling millions of concurrent users:
+
+* **⚡ Node.js Cluster Scaling**: The backend automatically forks a worker process for every CPU core on the host machine, balancing massive traffic loads and enabling zero-downtime self-healing.
+* **🚦 Nginx Load Balancer (API Gateway)**: All incoming API requests are intelligently routed across the backend replicas using a `least_conn` strategy inside Docker Compose.
+* **🛡️ Distributed Redis Rate Limiting**: Shifted rate-limiting from local RAM to an isolated Redis instance (`rate-limit-redis`) to enforce security limits universally across all clustered workers.
+* **🔒 Enterprise Security**: Hardened with **Helmet.js** (HTTP security headers) and **Express Mongo Sanitize** (stripping malicious NoSQL injection payloads).
+* **🧪 CI/CD & Automated Testing**: Features a GitHub Actions pipeline and a full **Jest/Supertest** automated unit testing suite for backend validation.
+* **⚡ React Code Splitting**: Frontend optimized with `React.lazy()` and `<Suspense>` to massively cut initial bundle sizes and boost Google Lighthouse scores.
+* **📚 SDE Preparation Hub**: A fully interactive library containing 100+ meticulously categorized technical questions (HLD, LLD, OS, CN, DBMS, DSA) filtered by role level (SDE-1, SDE-2, SDE-3) with animated, drop-down answer reveals.
+
+---
+
 ## ✨ Features
 
 ### 🔐 Authentication
