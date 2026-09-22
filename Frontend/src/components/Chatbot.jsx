@@ -82,15 +82,15 @@ const Chatbot = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={\`flex gap-2 max-w-[85%] \${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}\`}>
+                  <div className={`flex gap-2 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                     
                     {/* Avatar */}
-                    <div className={\`w-8 h-8 rounded-full flex items-center justify-center shrink-0 \${msg.sender === 'user' ? 'bg-green-600' : 'bg-gray-900'}\`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.sender === 'user' ? 'bg-green-600' : 'bg-gray-900'}`}>
                       {msg.sender === 'user' ? <User size={16} className="text-white"/> : <Bot size={16} className="text-white"/>}
                     </div>
 
                     {/* Bubble */}
-                    <div className={\`p-3 rounded-2xl text-sm shadow-sm \${msg.sender === 'user' ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'}\`}>
+                    <div className={`p-3 rounded-2xl text-sm shadow-sm ${msg.sender === 'user' ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'}`}>
                       <Markdown className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-100 prose-pre:text-gray-800">
                         {msg.text}
                       </Markdown>
