@@ -3,6 +3,7 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { askAi } from '../services/openRouter.services.js';
 import User from '../model/user.model.js';
 import Interview from '../model/interview.model.js';
+import redis from '../config/redis.js';
 
 export const analyzeResume = async (req, res) => {
     try {
@@ -355,7 +356,16 @@ export const getMyInterviews = async (req, res) => {
 
 export const getInterviewReport = async (req, res) => {
     try {
-        const interview = await Interview.findById(req.params.id);
+        const interviewId = req.params.id;
+        const cacheKey = `interview_report:${interviewId}`;
+
+        // 1. Check Redis Cache
+        const cachedReport = await redis.get(cacheKey);
+        if (cachedReport) {
+            return res.json(JSON.parse(cachedReport));
+        }
+
+        const interview = await Interview.findById(interviewId);
 
         if (!interview) {
             return res.status(404).json({ message: "interview not found"});
@@ -377,13 +387,18 @@ export const getInterviewReport = async (req, res) => {
         const avgCommunication = totalQuestions ? totalCommunication / totalQuestions : 0;
         const avgCorrectness = totalQuestions ? totalCorrectness / totalQuestions : 0;
 
-        return res.json({
+        const reportData = {
             finalScore: interview.finalScore,
             confidence: Number(avgConfidence.toFixed(1)),
             communication: Number(avgCommunication.toFixed(1)),
             correctness: Number(avgCorrectness.toFixed(1)),
             questionWiseScore: interview.question
-        });
+        };
+
+        // 2. Store in Redis Cache for 1 hour (3600 seconds)
+        await redis.set(cacheKey, JSON.stringify(reportData), 'EX', 3600);
+
+        return res.json(reportData);
 
     } catch (error) {
         return res.status(500).json({ message: `failed to find currentuser interview report ${error}`});

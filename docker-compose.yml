@@ -10,6 +10,19 @@ services:
       - "8080:8080"
     env_file:
       - ./Backend/.env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - mockmate-network
+
+  redis:
+    image: redis:alpine
+    container_name: mockmate-redis
+    ports:
+      - "6379:6379"
     restart: unless-stopped
     networks:
       - mockmate-network
