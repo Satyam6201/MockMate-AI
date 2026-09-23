@@ -91,9 +91,11 @@ const Chatbot = () => {
 
                     {/* Bubble */}
                     <div className={`p-3 rounded-2xl text-sm shadow-sm ${msg.sender === 'user' ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'}`}>
-                      <Markdown className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-100 prose-pre:text-gray-800">
-                        {msg.text}
-                      </Markdown>
+                      <div className="prose prose-sm prose-p:leading-relaxed prose-pre:bg-gray-100 prose-pre:text-gray-800">
+                        <Markdown>
+                          {msg.text}
+                        </Markdown>
+                      </div>
                     </div>
                     
                   </div>
