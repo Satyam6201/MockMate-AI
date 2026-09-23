@@ -373,6 +373,62 @@ The backend adheres strictly to RESTful principles. All responses follow a stand
 
 ---
 
+## 9. 📁 Folder Structure & File Explanations
+
+### Backend (Node.js/Express)
+Handles API logic, database integration, and AI engine services.
+* `app.js`: Main Express application configuration, security middleware, and route mounting.
+* `index.js`: Server entry point; sets up Node.js clustering across CPU cores.
+* **config/**
+  * `db.js`: MongoDB connection setup with connection pooling.
+  * `redis.js`: Redis caching configuration.
+  * `token.js`: Utility for generating JWT tokens.
+* **controllers/**
+  * `auth.controller.js`: Handles user authentication, Google OAuth, and JWT cookies.
+  * `chatbot.controller.js`: Manages AI support chatbot logic.
+  * `interview.controller.js`: Core logic for generating adaptive questions and submitting answers.
+  * `payment.controller.js`: Stripe integration logic.
+  * `user.controller.js`: User profile management.
+* **middleware/**
+  * `isAuth.js`: JWT verification middleware.
+  * `multer.js`: File upload handling for resumes.
+  * `rateLimit.js`: API rate limiting to prevent abuse.
+* **model/**
+  * `interview.model.js`: Mongoose schema for adaptive interviews and nested questions.
+  * `payment.model.js`: Mongoose schema for tracking transactions.
+  * `user.model.js`: Mongoose schema for user accounts.
+* **router/**
+  * API route definitions linking HTTP endpoints to controllers.
+* **services/**
+  * `difficultyEngine.service.js`: Deterministic engine determining difficulty phases and topics.
+  * `openRouter.services.js`: Core integration with OpenRouter AI API.
+  * `questionGenerator.service.js`: Generates specific coding/scenario questions based on engine parameters.
+  * `stripe.service.js`: Stripe payment service utility.
+* **tests/**
+  * `app.test.js`: Express route and error boundary tests.
+  * `difficultyEngine.test.js`: Unit tests for the Difficulty Engine logic.
+
+### Frontend (React/Vite)
+Contains the React user interface and client-side logic.
+* `src/App.jsx`: Main routing and layout wrapper.
+* `src/main.jsx`: React root mounting point.
+* **src/components/**
+  * `AuthModel.jsx`: Modal for user login/signup.
+  * `Chatbot.jsx`: Floating AI support chatbot interface.
+  * `Step1SetUp.jsx`: Interview configuration and resume upload screen.
+  * `Step2Interview.jsx`: Main interview interface (Voice AI, video, Monaco code editor).
+  * `Step3Report.jsx`: Final interview performance report visualization.
+  * `Timer.jsx`: Countdown timer component for questions.
+  * `Navbar.jsx` & `Footer.jsx`: Global layout components.
+* **src/pages/**
+  * `Home.jsx`, `Pricing.jsx`, `Docs.jsx`, `InterviewHistory.jsx`, `InterviewPage.jsx`, etc.: Main application pages.
+* **src/redux/**
+  * `store.js` & `userSlice.js`: Redux state management for user sessions.
+* **src/utils/**
+  * `firebase.js`: Firebase configuration (e.g., Google Auth).
+
+---
+
 ## 10. DevOps, Docker, & CI/CD Pipeline
 
 MockMate AI uses a highly professional DevOps pipeline for continuous integration and rapid deployment.
