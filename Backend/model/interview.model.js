@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 const questionSchema = new mongoose.Schema({
     question: String,
-    difficulty: String,
+    difficulty: String, // e.g. "Medium"
+    topic: String, // e.g. "React"
+    targetDifficulty: Number, // internal score 0-100
     timeLimit: Number,
     answer: String,
     feedback: String,
@@ -17,6 +19,10 @@ const interviewSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
+    },
+    totalQuestions: {
+        type: Number,
+        default: 5
     },
 
     role: {

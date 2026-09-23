@@ -11,7 +11,10 @@ import toast from 'react-hot-toast'
 
 const Step2Interview = ({interviewData, onFinish}) => {
 
-  const {interviewId, questions, userName} = interviewData;
+  const {interviewId, questions, userName, totalQuestions} = interviewData;
+  const [interviewQuestions, setInterviewQuestions] = useState(questions);
+  const expectedTotal = totalQuestions || 5;
+
   const [warningsCount, setWarningsCount] = useState(0);
   const [isIntroPhase, setIsIntroPhase] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
@@ -20,13 +23,13 @@ const Step2Interview = ({interviewData, onFinish}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [timeLeft, setTimeLeft] = useState(questions[0]?.timeLimit || 0);
+  const [timeLeft, setTimeLeft] = useState(interviewQuestions[0]?.timeLimit || 0);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voiceGender, setVoiceGender] = useState("male");
   const [subtitle, setSubtitle] = useState("");
   const videoRef = useRef(null);
-  const currentQuestion = questions[currentIndex];
+  const currentQuestion = interviewQuestions[currentIndex];
 
   useEffect(() => {
     const loadVoices = () => {
@@ -124,7 +127,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
       else if (currentQuestion) {
         await new Promise(r => setTimeout(r, 800));
 
-        if (currentIndex === questions.length - 1) {
+        if (currentIndex === expectedTotal - 1) {
           await speakText("Alright, this is the last question. Take your time.");
         }
 
@@ -216,6 +219,11 @@ const Step2Interview = ({interviewData, onFinish}) => {
 
         setFeedback(result.data.feedback);
         speakText(result.data.feedback);
+        
+        if (result.data.nextQuestion) {
+          setInterviewQuestions(prev => [...prev, result.data.nextQuestion]);
+        }
+        
         setIsSubmitting(false);
 
     } catch (error) {
@@ -228,7 +236,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
     setAnswer("");
     setFeedback("");
 
-    if (currentIndex + 1 >= questions.length) {
+    if (currentIndex + 1 >= expectedTotal) {
       finishInterview();
       return;
     }
@@ -373,7 +381,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
                 <span className='text-[10px] uppercase font-bold text-gray-500'>Current</span>
               </div>
               <div className='border-l border-gray-200'>
-                <span className='block text-2xl font-black text-gray-800'>{questions?.length || 5}</span>
+                <span className='block text-2xl font-black text-gray-800'>{expectedTotal}</span>
                 <span className='text-[10px] uppercase font-bold text-gray-500'>Total</span>
               </div>
             </div>
@@ -499,7 +507,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className='w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 font-bold text-lg'>
-                {currentIndex + 1 >= questions.length ? "Finish Interview" : "Next Question"} <BsArrowRight size={20} />
+                {currentIndex + 1 >= expectedTotal ? "Finish Interview" : "Next Question"} <BsArrowRight size={20} />
               </motion.button>
             </motion.div>
           )}

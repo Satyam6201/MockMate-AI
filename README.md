@@ -61,6 +61,12 @@ The core engine of MockMate AI. Candidates upload their resumes in PDF format. T
 * **LLM Abstraction via OpenRouter**: The application integrates with **OpenRouter**, securely routing API requests to models like `openai/gpt-4o-mini` while avoiding vendor lock-in. 
 * **Dynamic Generation**: The LLM evaluates the candidate's exact project details to construct tailored questions like, *"I see you used Redis in your E-commerce project. Can you explain how you handled cache invalidation during high traffic spikes?"*
 
+### 🧠 Adaptive Question Difficulty Engine (JIT Generation)
+The system leverages a sophisticated **Just-In-Time (JIT) Adaptive Engine**. It doesn't generate a fixed set of questions upfront. Instead, it evaluates candidate performance in real-time.
+* **Deterministic Rules Engine**: Analyzes real-time performance (score, correctness, confidence) against the candidate's base experience level to dynamically adjust difficulty (e.g., scoring 9/10 on an Easy question automatically bumps the next question to Hard).
+* **Topic Coverage & Follow-ups**: Extracts relevant topics from the candidate's uploaded resume (e.g., React, Node, System Design). The engine ensures topic variety and occasionally triggers deep-dive "Follow-up" questions if the candidate demonstrates strong expertise in a specific area.
+* **Idempotent API**: Engineered with retry-protection and state isolation so network failures won't double-charge AI tokens or evaluate the same answer twice.
+
 ### 🤖 Unified AI Support Chatbot & Voice AI
 A real-time, Context-Aware Support Bot seamlessly integrated into the frontend. 
 * **Real-Time Voice Input (Speech-to-Text)**: Utilizes the native browser **Web Speech API** (`webkitSpeechRecognition`) to allow users to speak directly to the AI without typing, providing a highly accessible and premium FAANG-like multimodal experience.

@@ -70,6 +70,9 @@ export const analyzeResume = async (req, res) => {
     }
 }
 
+import { getBaselineDifficulty, getDifficultyLabel, extractTopics } from '../services/difficultyEngine.service.js';
+import { generateAdaptiveQuestion } from '../services/questionGenerator.service.js';
+
 export const generateQuestion =  async (req, res) => {
     try {
         let { role, experience, mode, resumeText, projects, skills } = req.body;
@@ -82,7 +85,6 @@ export const generateQuestion =  async (req, res) => {
         }
 
         const user = await User.findById(req.userId);
-
         if (!user) {
             return res.status(404).json({message: "User is Not Found"});
         }
@@ -91,204 +93,202 @@ export const generateQuestion =  async (req, res) => {
             return res.status(400).json({message: "Not enough credits. Minimum 50 required"})
         }
 
-        const projectText = Array.isArray(projects) && projects.length? projects.join(", ") : "None";
-        const skillsText = Array.isArray(skills) && skills.length? skills.join(", ") : "None";
-        const safeResume = resumeText?.trim() || "None";
+        // Determine Q1 Difficulty
+        const baselineScore = getBaselineDifficulty(role, experience);
+        const baselineLabel = getDifficultyLabel(baselineScore);
+        
+        // Determine Q1 Topic
+        const topics = extractTopics(role, resumeText);
+        const targetTopic = topics[0] || "General";
 
-        const userPrompt = `
-        Role: ${role}
-        Experience: ${experience}
-        InterviewMode: ${mode}
-        Projects: ${projectText}
-        skills: ${skillsText}
-        Resume: ${safeResume}
-        `;
-
-        if (!userPrompt.trim()) {
-            return res.status(400).json({ 
-                message: "Prompt content is empty."
-            });           
-        }
-
-        const messages = [
-            {
-                role: "system",
-                content: ` You are a real human interviewer conducting a professional interview.
-                Speak in simple, natural English as if you are directly talking to the candidate.
-                Generate exactly 5 interview questions.
-                
-                Strict Rules: 
-                - Each question must contain between 15 and 25 words.
-                - Each question must be a single complete sentence.
-                - Do NOT number them.
-                - Do NOT add explanations.
-                - Do NOT add extra text before or after.
-                - One question per line only.
-                - Keep language simple and conversational.
-                - Questions must feel practical and realistic.
-
-                Difficulty progression:
-                Question 1 → easy  
-                Question 2 → easy  
-                Question 3 → medium  
-                Question 4 → medium  
-                Question 5 → hard  
-
-               Make questions based on the candidate’s role, 
-               experience,interviewMode, projects, skills, and resume details.`
-            },
-            {
-               role: "user",
-               content: userPrompt
-            }
-        ];
-
-        const aiResponse = await askAi(messages);
-        if (!aiResponse) {
-            return res.status(500).json({
-                message: "AI returned empty response."
-            })
-        }
-
-        const questionsArray = aiResponse
-        .split("\n")
-        .map(q => q.trim())
-        .filter(q => q.length > 0)
-        .slice(0, 5);
-
-        if (questionsArray.length === 0) {
-            return res.status(500).json({
-                message: "AI failed to generate questions."
-            })
-        }
+        // Generate Q1
+        const generatedQ = await generateAdaptiveQuestion({
+            role, experience, mode, resumeText, projects, skills,
+            targetDifficultyLabel: baselineLabel,
+            targetTopic,
+            isFollowUp: false,
+            previousQuestionsContext: []
+        });
 
         user.credits -= 50;
         await user.save();
-        
 
-    const interview = await Interview.create({
-    userId: user._id,
-    role,
-    experience,
-    mode,
-    resumeText,
-    question: questionsArray.map((q, index) => ({
-        question: q,
-        difficulty: ["easy", "easy", "medium", "medium", "hard"][index],
-        timeLimit: [60, 60, 90, 90, 120][index]
-    })) 
-})
+        const interview = await Interview.create({
+            userId: user._id,
+            role,
+            experience,
+            mode,
+            resumeText,
+            totalQuestions: 5,
+            question: [{
+                question: generatedQ.question,
+                topic: generatedQ.topic,
+                difficulty: baselineLabel,
+                targetDifficulty: baselineScore,
+                timeLimit: 60
+            }] 
+        });
 
-  res.json({
-  interviewId: interview._id,
-  creditsLeft: user.credits,
-  userName: user.name,
-  questions: interview.question
-});
+        res.json({
+            interviewId: interview._id,
+            creditsLeft: user.credits,
+            userName: user.name,
+            questions: interview.question,
+            totalQuestions: interview.totalQuestions
+        });
 
     } catch (error) {
-        return res.status(500).json({message: `Failed to create interview ${error}`});
+        return res.status(500).json({message: `Failed to create interview: ${error.message}`});
     }
 }
+
+import { calculateNextQuestionParams } from '../services/difficultyEngine.service.js';
 
 export const submitAnswer = async (req, res) => {
     try {
         const { interviewId, questionIndex, answer, timeTaken } = req.body;
 
         const interview = await Interview.findById(interviewId);
+        if (!interview) {
+            return res.status(404).json({ message: "Interview not found" });
+        }
+
         const question = interview.question[questionIndex];
-
-        if (!answer) {
-            question.score = 0;
-            question.feedback = "You did not submit an answer.";
-            question.answer = "";
-
-            await interview.save();
-
-            return res.json({
-                feedback: question.feedback
-            })
+        if (!question) {
+            return res.status(400).json({ message: "Question index out of bounds" });
         }
 
-        if (timeTaken > question.timeLimit) {
-            question.score = 0;
-            question.feedback = "Your Time is Up";
-            question.answer = answer;
+        // Idempotency: Skip evaluation if already evaluated
+        let parsed = null;
+        if (question.answer !== undefined && question.feedback) {
+            parsed = {
+                feedback: question.feedback,
+                confidence: question.confidence,
+                communication: question.communication,
+                correctness: question.correctness,
+                finalScore: question.score
+            };
+        } else {
+            if (!answer) {
+                question.score = 0;
+                question.feedback = "You did not submit an answer.";
+                question.answer = "";
+                await interview.save();
+                parsed = { feedback: question.feedback };
+            } else if (timeTaken > question.timeLimit) {
+                question.score = 0;
+                question.feedback = "Your Time is Up";
+                question.answer = answer;
+                await interview.save();
+                parsed = { feedback: question.feedback };
+            } else {
+                const messages = [
+                {
+                    role: "system",
+                    content: `
+                        You are a professional human interviewer evaluating a candidate's answer in a real interview.
+                        Evaluate naturally and fairly, like a real person would.
+                        Score the answer in these areas (0 to 10):
 
-            await interview.save();
+                        1. Confidence – Does the answer sound clear, confident, and well-presented?
+                        2. Communication – Is the language simple, clear, and easy to understand?
+                        3. Correctness – Is the answer accurate, relevant, and complete?
 
-            return res.json({
-                feedback: question.feedback
-            })
+                    Rules:
+                        - Be realistic and unbiased.
+                        - Do not give random high scores.
+                        - If the answer is weak, score low.
+                        - If the answer is strong and detailed, score high.
+                        - Consider clarity, structure, and relevance.
+
+                    Calculate:
+                    finalScore = average of confidence, communication, and correctness (rounded to nearest whole number).
+
+                    Feedback Rules:
+                        - Write natural human feedback.
+                        - 10 to 15 words only.
+                        - Sound like real interview feedback.
+                        - Can suggest improvement if needed.
+                        - Do NOT repeat the question.
+                        - Do NOT explain scoring.
+                        - Keep tone professional and honest.
+
+                    Return ONLY valid JSON in this format:
+
+                {
+                    "confidence": number,
+                    "communication": number,
+                    "correctness": number,
+                    "finalScore": number,
+                    "feedback": "short human feedback"
+                }`
+                },
+                {
+                    role: "user",
+                    content: `Question: ${question.question}\nAnswer: ${answer}`
+                }];
+
+                const aiResponse = await askAi(messages);
+                parsed = JSON.parse(aiResponse);
+
+                question.answer = answer;
+                question.confidence = parsed.confidence;
+                question.communication = parsed.communication;
+                question.correctness = parsed.correctness;
+                question.score = parsed.finalScore;
+                question.feedback = parsed.feedback;
+                
+                await interview.save();
+            }
         }
 
-        const messages = [
-        {
-        role: "system",
-        content: `
-            You are a professional human interviewer evaluating a candidate's answer in a real interview.
-            Evaluate naturally and fairly, like a real person would.
-            Score the answer in these areas (0 to 10):
+        // Adaptive Generation: If we need more questions, generate the next one
+        const totalExpected = interview.totalQuestions || 5;
+        let nextQuestion = null;
+        
+        if (questionIndex + 1 < totalExpected) {
+            // Check if next question is already generated (retry scenario)
+            if (interview.question.length > questionIndex + 1) {
+                nextQuestion = interview.question[questionIndex + 1];
+            } else {
+                // Determine params using the Engine
+                const nextParams = calculateNextQuestionParams(interview, questionIndex);
+                
+                // Generate next question
+                const generatedQ = await generateAdaptiveQuestion({
+                    role: interview.role,
+                    experience: interview.experience,
+                    mode: interview.mode,
+                    resumeText: interview.resumeText,
+                    targetDifficultyLabel: nextParams.targetDifficultyLabel,
+                    targetTopic: nextParams.targetTopic,
+                    isFollowUp: nextParams.isFollowUp,
+                    previousQuestionsContext: interview.question.map(q => ({ question: q.question }))
+                });
 
-            1. Confidence – Does the answer sound clear, confident, and well-presented?
-            2. Communication – Is the language simple, clear, and easy to understand?
-            3. Correctness – Is the answer accurate, relevant, and complete?
+                // Append and save
+                nextQuestion = {
+                    question: generatedQ.question,
+                    topic: generatedQ.topic,
+                    difficulty: nextParams.targetDifficultyLabel,
+                    targetDifficulty: nextParams.targetDifficultyScore,
+                    timeLimit: 90
+                };
+                
+                interview.question.push(nextQuestion);
+                await interview.save();
+                
+                // Fetch the pushed subdocument to return it with _id
+                nextQuestion = interview.question[interview.question.length - 1];
+            }
+        }
 
-        Rules:
-            - Be realistic and unbiased.
-            - Do not give random high scores.
-            - If the answer is weak, score low.
-            - If the answer is strong and detailed, score high.
-            - Consider clarity, structure, and relevance.
-
-        Calculate:
-        finalScore = average of confidence, communication, and correctness (rounded to nearest whole number).
-
-        Feedback Rules:
-            - Write natural human feedback.
-            - 10 to 15 words only.
-            - Sound like real interview feedback.
-            - Can suggest improvement if needed.
-            - Do NOT repeat the question.
-            - Do NOT explain scoring.
-            - Keep tone professional and honest.
-
-        Return ONLY valid JSON in this format:
-
-    {
-        "confidence": number,
-        "communication": number,
-        "correctness": number,
-        "finalScore": number,
-        "feedback": "short human feedback"
-    }`
-    }
-      ,
-      {
-        role: "user",
-        content: `
-        Question: ${question.question}
-        Answer: ${answer}
-    `
-      }
-        ];
-
-        const aiResponse = await askAi(messages);
-
-        const parsed = JSON.parse(aiResponse);
-
-        question.answer = answer;
-        question.confidence = parsed.confidence;
-        question.communication = parsed.communication;
-        question.correctness = parsed.correctness;
-        question.finalScore = parsed.finalScore;
-        question.feedback = parsed.feedback;
-
-        await interview.save();
-
-        return res.status(200).json({feedback: parsed.feedback});
+        return res.status(200).json({
+            feedback: parsed.feedback,
+            nextQuestion
+        });
     } catch (error) {
-        return res.status(500).json({message: `Failed to submit answer ${error}`});
+        return res.status(500).json({message: `Failed to submit answer: ${error.message}`});
     }
 }
 
