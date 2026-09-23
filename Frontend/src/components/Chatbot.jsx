@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import axios from 'axios';
 import { serverUrl } from '../App';
-import { Bot, X, Send, User } from 'lucide-react';
+import { Bot, X, Send, User, Mic, MicOff } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 const Chatbot = () => {
@@ -12,7 +12,58 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setInput((prev) => prev + (prev ? ' ' : '') + finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } else {
+        alert("Your browser does not support Speech Recognition. Please use Chrome or Edge.");
+      }
+    }
+  };
 
   // Auto-scroll to bottom of chat
   useEffect(() => {
@@ -21,6 +72,11 @@ const Chatbot = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+    
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
 
     const userMessage = input.trim();
     setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
@@ -120,13 +176,25 @@ const Chatbot = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-white border-t border-gray-200 flex gap-2">
+            <div className="p-3 bg-white border-t border-gray-200 flex gap-2 items-center">
+              <button
+                onClick={toggleListening}
+                title={isListening ? "Stop listening" : "Start Voice Input"}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shrink-0 shadow-sm border ${
+                  isListening 
+                  ? 'bg-red-500 text-white border-red-600 animate-pulse' 
+                  : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700'
+                }`}
+              >
+                {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+              
               <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
+                placeholder={isListening ? "Listening..." : "Ask me anything..."}
                 className="flex-1 bg-gray-100 rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-green-500 transition-all text-sm"
                 disabled={isLoading}
               />
