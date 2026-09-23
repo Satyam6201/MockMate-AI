@@ -4,6 +4,7 @@
 # 🚀 MockMate AI: The Ultimate Enterprise SDE Interview Platform
 
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
@@ -12,7 +13,8 @@
 ![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
 ![Framer](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-000000?style=for-the-badge&logo=openai&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=for-the-badge&logo=Stripe&logoColor=white)
 
 **A highly scalable, distributed, and AI-powered mock interview platform designed to help Software Engineering (SDE) candidates prepare for high-stakes technical interviews. Built with Enterprise System Design principles to handle millions of concurrent users.**
 
@@ -54,11 +56,15 @@ Furthermore, this project acts as a masterclass in **System Design**. It is not 
 
 ### 🧠 RAG-Powered AI Interviews
 The core engine of MockMate AI. Candidates upload their resumes in PDF format. The system doesn't just pass the text to an LLM (which risks token limits and hallucinations). Instead:
-* **Extraction**: Text is extracted via PDF parsers.
-* **Semantic Chunking**: The text is broken down into ~500 token semantic chunks.
-* **Vectorization**: Sent to OpenAI's `text-embedding-3-small` model to generate dense vectors.
-* **Retrieval**: During the interview, the AI searches this vector database to pull the candidate's exact project details.
-* **Dynamic Generation**: The LLM constructs questions like, *"I see you used Redis in your E-commerce project. Can you explain how you handled cache invalidation during high traffic spikes?"*
+* **Extraction**: Text is extracted via robust PDF parsers.
+* **Semantic Chunking**: The text is mathematically broken down into contextual chunks.
+* **LLM Abstraction via OpenRouter**: The application integrates with **OpenRouter**, securely routing API requests to models like `openai/gpt-4o-mini` while avoiding vendor lock-in. 
+* **Dynamic Generation**: The LLM evaluates the candidate's exact project details to construct tailored questions like, *"I see you used Redis in your E-commerce project. Can you explain how you handled cache invalidation during high traffic spikes?"*
+
+### 🤖 Unified AI Support Chatbot
+A real-time, Context-Aware Support Bot seamlessly integrated into the frontend. 
+* Designed using `react-markdown` for elegant text rendering.
+* Unified on the OpenRouter backend service. This drastically simplifies operations by ensuring all LLM processing (both Interviews and Chatbot) funnels through a single highly-optimized route and API key, reducing latency and infrastructure overhead.
 
 ### 📚 The SDE Preparation Hub
 An exhaustive, beautifully animated library designed for extensive study.
@@ -292,7 +298,7 @@ If a hacker sends:
 { "email": "admin@mockmate.com", "password": { "$gt": "" } }
 ```
 The database might log them in without a password! 
-**Express Mongo Sanitize** automatically intercepts every single incoming request and recursively strips out any keys containing `$` or `.`, completely neutralizing this attack vector.
+**Express Mongo Sanitize** automatically intercepts incoming requests. To guarantee strict compatibility with **Express 5.x** (where `req.query` is locked behind a strict getter), the platform utilizes a custom-engineered middleware pattern that recursively sanitizes object properties *in place* without attempting illegal top-level reassignments. This mathematically neutralizes injection attacks while preserving the high-performance routing of Express 5.
 
 ### 🔑 JSON Web Tokens (JWT) & HTTP-Only Cookies
 Instead of storing sensitive auth tokens in `localStorage` (where they can be stolen by malicious JavaScript extensions), MockMate AI issues HTTP-Only Cookies. These cookies are automatically attached to network requests but are 100% invisible to frontend JavaScript, preventing XSS token theft.
@@ -478,8 +484,7 @@ The backend relies on the following environment variables. Do NOT commit these t
 | `PORT` | The port the Express workers listen on | `8080` |
 | `MONGODB_URL` | MongoDB Atlas Connection String | `mongodb+srv://admin:pass@cluster.mongodb.net/mockmate` |
 | `JWT_SECRET` | Cryptographic key for signing cookies | `super_secret_jwt_key_992` |
-| `OPENAI_API_KEY` | API key for GPT and Embedding models | `sk-proj-...` |
-| `GEMINI_API_KEY` | Google Gemini API key for Chatbot | `AIzaSy...` |
+| `OPENROUTER_API_KEY` | OpenRouter API key (routes to GPT-4o-mini / Gemini) | `sk-or-v1-...` |
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379` |
 | `STRIPE_SECRET_KEY` | Stripe secret for generating sessions | `sk_test_...` |
 | `STRIPE_WEBHOOK_SECRET` | Secret to verify Stripe events | `whsec_...` |
