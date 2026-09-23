@@ -491,15 +491,18 @@ The backend relies on the following environment variables. Do NOT commit these t
 
 ---
 
-## 14. Future Roadmaps & Scaling
+## 14. Future Roadmaps & Scaling (FAANG-Level Upgrades)
 
-While the current architecture handles 1-2 million concurrent requests gracefully via single-node vertical clustering and Nginx, scaling to 10+ million users will require migrating to Kubernetes (K8s).
+While the current architecture handles 1-2 million concurrent requests gracefully via single-node vertical clustering and Nginx, scaling to the next level requires advanced enterprise patterns.
 
 **Future Feature Roadmap:**
-1. **Kubernetes Migration**: Replace Docker Compose with K8s Pods and a native Ingress controller for massive horizontal scaling across AWS EC2 instances.
-2. **Audio/Video RAG**: Implement WebRTC and OpenAI Whisper to transcribe user audio in real-time, matching spoken words against the vector database.
-3. **Database Sharding**: As the Vector storage grows, implement MongoDB sharding based on `userId` to maintain ultra-low latency index lookups.
-4. **WebSocket Integration**: Upgrade the real-time proctoring from basic HTTP REST calls to persistent WebSockets (Socket.io) for live interviewer dashboard monitoring.
+1. **Interactive Code Execution Engine (Remote Code Execution)**: Integrate **Monaco Editor** (VS Code core) on the frontend. Build a secure, sandboxed execution environment using heavily restricted Docker containers or WebAssembly (e.g., Pyodide) to actually compile and run the candidate's code in real-time.
+2. **Collaborative System Design Whiteboard**: Integrate an interactive Canvas/Excalidraw API for High-Level Design (HLD) rounds, allowing candidates to draw architectures that the AI can evaluate using Vision models (e.g., GPT-4o).
+3. **WebRTC + Real-Time AI Transcription**: Upgrade from text-based chatting to a live video/audio interview. Use **WebRTC** for P2P video streaming and pipe the audio stream through **OpenAI Whisper** for real-time transcription and vocal sentiment analysis (detecting nervousness or confidence).
+4. **Event-Driven Microservices (Kafka/RabbitMQ)**: Break down the Express monolith. Extract the heavy LLM/RAG generation into a separate Python/Go microservice. Use **Apache Kafka** or **RabbitMQ** as a message broker to handle asynchronous background tasks without blocking the main API gateway.
+5. **Kubernetes (K8s) & Infrastructure as Code (Terraform)**: Replace Docker Compose with K8s Pods, managed via AWS EKS. Provision the entire AWS cloud infrastructure (VPC, RDS, ElastiCache, EKS) using **Terraform** to demonstrate modern DevOps mastery.
+6. **Database Sharding & Read Replicas**: As the Vector storage grows, implement MongoDB sharding based on `userId` and set up Read Replicas to maintain ultra-low latency index lookups globally.
+7. **Advanced Analytics Pipeline**: Implement an ELK stack (Elasticsearch, Logstash, Kibana) or Prometheus/Grafana to track live application metrics, error rates, and AI response latency.
 
 ---
 
