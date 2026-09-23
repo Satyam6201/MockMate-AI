@@ -12,6 +12,7 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 

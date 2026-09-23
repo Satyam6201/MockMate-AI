@@ -61,10 +61,11 @@ The core engine of MockMate AI. Candidates upload their resumes in PDF format. T
 * **LLM Abstraction via OpenRouter**: The application integrates with **OpenRouter**, securely routing API requests to models like `openai/gpt-4o-mini` while avoiding vendor lock-in. 
 * **Dynamic Generation**: The LLM evaluates the candidate's exact project details to construct tailored questions like, *"I see you used Redis in your E-commerce project. Can you explain how you handled cache invalidation during high traffic spikes?"*
 
-### 🤖 Unified AI Support Chatbot
+### 🤖 Unified AI Support Chatbot & Voice AI
 A real-time, Context-Aware Support Bot seamlessly integrated into the frontend. 
-* Designed using `react-markdown` for elegant text rendering.
-* Unified on the OpenRouter backend service. This drastically simplifies operations by ensuring all LLM processing (both Interviews and Chatbot) funnels through a single highly-optimized route and API key, reducing latency and infrastructure overhead.
+* **Real-Time Voice Input (Speech-to-Text)**: Utilizes the native browser **Web Speech API** (`webkitSpeechRecognition`) to allow users to speak directly to the AI without typing, providing a highly accessible and premium FAANG-like multimodal experience.
+* **Markdown Rendering**: Designed using `react-markdown` for elegant text rendering, supporting code blocks, lists, and formatting.
+* **Unified OpenRouter Backend**: This drastically simplifies operations by ensuring all LLM processing (both Interviews and Chatbot) funnels through a single highly-optimized route and API key, reducing latency and infrastructure overhead.
 
 ### 📚 The SDE Preparation Hub
 An exhaustive, beautifully animated library designed for extensive study.
