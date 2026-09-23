@@ -1,7 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Load Gemini API Key securely from Environment Variables
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import { askAi } from "../services/openRouter.services.js";
 
 const systemInstruction = `
 You are the official AI Support Assistant for 'MockMate AI'.
@@ -32,10 +29,12 @@ export const chatWithBot = async (req, res) => {
             return res.status(400).json({ success: false, message: "Message is required." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction });
-        
-        const result = await model.generateContent(message);
-        const response = result.response.text();
+        const messages = [
+            { role: "system", content: systemInstruction },
+            { role: "user", content: message }
+        ];
+
+        const response = await askAi(messages);
 
         return res.status(200).json({
             success: true,
