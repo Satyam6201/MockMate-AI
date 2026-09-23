@@ -26,7 +26,12 @@ app.use(cookieParser());
 
 // --- SECURITY MIDDLEWARES ---
 app.use(helmet());
-app.use(mongoSanitize());
+app.use((req, res, next) => {
+    if (req.body) mongoSanitize.sanitize(req.body);
+    if (req.params) mongoSanitize.sanitize(req.params);
+    if (req.query) mongoSanitize.sanitize(req.query);
+    next();
+});
 
 // Apply global rate limiting to all requests
 app.use(globalLimiter);
