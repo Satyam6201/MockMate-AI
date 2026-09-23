@@ -38,7 +38,7 @@ app.use("/api/payment", paymentRouter);
 app.use("/api/chatbot", chatbotRouter);
 
 // Global 404 Handler for undefined API routes
-app.use("*", (req, res) => {
+app.use((req, res, next) => {
     res.status(404).json({
         success: false,
         message: `API endpoint ${req.originalUrl} not found.`
