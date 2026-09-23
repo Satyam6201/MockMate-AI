@@ -4,6 +4,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUserData } from "./redux/userSlice";
 import { Toaster } from "react-hot-toast";
+import { useSocket } from "./hooks/useSocket.js";
 
 // Lazy Loaded Pages (Code Splitting for performance)
 const Home = lazy(() => import("./pages/Home"));
@@ -26,6 +27,7 @@ export const serverUrl = "http://localhost:8080";
 
 const App = () => {
   const dispatch = useDispatch();
+  useSocket(); // Initialize global socket connection
 
   useEffect(() => {
     const getUser = async () => {

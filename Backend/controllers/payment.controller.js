@@ -1,6 +1,7 @@
 import Payment from "../model/payment.model.js";
 import User from "../model/user.model.js";
 import stripe from "../services/stripe.service.js";
+import { getIO } from "../config/socket.js";
 
 export const createCheckoutSession = async (req, res) => {
     try {
@@ -152,6 +153,20 @@ export const stripeWebhook = async (req, res) => {
                 await User.findByIdAndUpdate(payment.userId, {
                     $inc: { credits: payment.credits }
                 });
+                
+                try {
+                    const io = getIO();
+                    io.to(`user:${payment.userId}`).emit("notification", {
+                        title: "Payment successful ✓",
+                        message: `+${payment.credits} Interview Credits added`,
+                        type: "success"
+                    });
+                    
+                    io.to(`user:${payment.userId}`).emit("user:credits_updated", { creditsAdded: payment.credits });
+                } catch (socketError) {
+                    console.error("Socket error on webhook", socketError);
+                }
+
                 console.log(`Payment successful for user ${payment.userId}. Credits added: ${payment.credits}`);
             }
         } catch (error) {

@@ -13,6 +13,7 @@ import AuthModel from './AuthModel';
 const Navbar = () => {
 
     const { userData } = useSelector((state) => state.user);
+    const socketStatus = useSelector((state) => state.socket?.status);
     const dispatch = useDispatch();
     const [showCreditPopup, setShowCreditPopup] = useState(false);
     const [showUserPopup, setShowUserPopup] = useState(false);
@@ -122,7 +123,17 @@ const Navbar = () => {
         <div className='flex items-center gap-4 sm:gap-6 relative'>
 
             {/* Credits Info */}
-            <div className='relative'>
+            <div className='relative flex items-center gap-2'>
+                {userData && (
+                    <div className='hidden sm:flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-100 rounded-full'>
+                        <div className={`w-2 h-2 rounded-full ${
+                            socketStatus === 'CONNECTED' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
+                            socketStatus === 'CONNECTING' ? 'bg-yellow-500 animate-pulse' :
+                            socketStatus === 'ERROR' || socketStatus === 'DISCONNECTED' ? 'bg-red-500' : 'bg-gray-300'
+                        }`} title={`Socket: ${socketStatus}`}></div>
+                        <span className='text-[10px] uppercase font-bold text-gray-400'>{socketStatus === 'CONNECTED' ? 'Live' : socketStatus}</span>
+                    </div>
+                )}
                 <motion.button 
                     whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}

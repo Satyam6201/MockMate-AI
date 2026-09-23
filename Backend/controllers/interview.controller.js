@@ -4,16 +4,24 @@ import { askAi } from '../services/openRouter.services.js';
 import User from '../model/user.model.js';
 import Interview from '../model/interview.model.js';
 import redis from '../config/redis.js';
+import { getIO } from '../config/socket.js';
 
 export const analyzeResume = async (req, res) => {
     try {
+        const io = getIO();
+        const userRoom = `user:${req.userId}`;
+
         if (!req.file) {
             return res.status(400).json({message: "Resume required"});
         }
+        
+        io.to(userRoom).emit("resume:stage", { stage: "UPLOAD_RECEIVED", progress: 10, message: "Resume uploaded ✓" });
 
         const filePath = req.file.path;
         const fileBuffer = await fs.promises.readFile(filePath);
         const uint8Array = new Uint8Array(fileBuffer);
+        
+        io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_STARTED", progress: 30, message: "Extracting text..." });
 
         const pdf = await pdfjsLib.getDocument({data: uint8Array}).promise;
 
@@ -29,6 +37,9 @@ export const analyzeResume = async (req, res) => {
         }
 
         resumeText = resumeText.replace(/\s+/g, " ").trim();
+        
+        io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_COMPLETED", progress: 50, message: "Text extracted ✓" });
+        io.to(userRoom).emit("resume:stage", { stage: "RESUME_ANALYSIS_STARTED", progress: 60, message: "Analyzing resume..." });
 
         const messages = [
             {
@@ -48,9 +59,15 @@ export const analyzeResume = async (req, res) => {
             }
         ];
 
+        io.to(userRoom).emit("resume:stage", { stage: "AI_CONTEXT_PREPARATION", progress: 75, message: "Preparing AI context..." });
         const aiResponse = await askAi(messages);
         const parsed = JSON.parse(aiResponse);
         fs.unlinkSync(filePath);
+        
+        io.to(userRoom).emit("resume:stage", { stage: "PROCESSING_COMPLETED", progress: 100, message: "Finalizing..." });
+        setTimeout(() => {
+             io.to(userRoom).emit("resume:completed", { message: "Ready" });
+        }, 500);
 
         res.json({
             role: parsed.role,
@@ -75,6 +92,9 @@ import { generateAdaptiveQuestion } from '../services/questionGenerator.service.
 
 export const generateQuestion =  async (req, res) => {
     try {
+        const io = getIO();
+        const userRoom = `user:${req.userId}`;
+
         let { role, experience, mode, resumeText, projects, skills } = req.body;
         role = role?.trim();
         experience = experience?.trim();
@@ -83,6 +103,8 @@ export const generateQuestion =  async (req, res) => {
         if (!role || !experience || !mode) {
             return res.status(400).json({ message: "Role, Experience and Mode are required!" });
         }
+        
+        io.to(userRoom).emit("interview:generation_progress", { stage: "INTERVIEW_INITIALIZING", message: "Preparing your interview..." });
 
         const user = await User.findById(req.userId);
         if (!user) {
@@ -93,13 +115,19 @@ export const generateQuestion =  async (req, res) => {
             return res.status(400).json({message: "Not enough credits. Minimum 50 required"})
         }
 
+        io.to(userRoom).emit("interview:generation_progress", { stage: "RESUME_CONTEXT_LOADING", message: "Resume context loaded ✓" });
+
         // Determine Q1 Difficulty
         const baselineScore = getBaselineDifficulty(role, experience);
         const baselineLabel = getDifficultyLabel(baselineScore);
         
+        io.to(userRoom).emit("interview:generation_progress", { stage: "SKILL_ANALYSIS", message: "Candidate skills identified ✓" });
+
         // Determine Q1 Topic
         const topics = extractTopics(role, resumeText);
         const targetTopic = topics[0] || "General";
+
+        io.to(userRoom).emit("interview:generation_progress", { stage: "QUESTION_GENERATION_STARTED", message: `Generating ${baselineLabel} technical questions...` });
 
         // Generate Q1
         const generatedQ = await generateAdaptiveQuestion({
@@ -110,6 +138,8 @@ export const generateQuestion =  async (req, res) => {
             isFollowUp: false,
             previousQuestionsContext: []
         });
+        
+        io.to(userRoom).emit("interview:generation_progress", { stage: "QUESTION_GENERATION_COMPLETED", message: "Preparing interview session..." });
 
         user.credits -= 50;
         await user.save();
@@ -130,6 +160,8 @@ export const generateQuestion =  async (req, res) => {
                 timeLimit: 60
             }] 
         });
+        
+        io.to(userRoom).emit("interview:generation_progress", { stage: "INTERVIEW_READY", message: "Interview Ready!" });
 
         res.json({
             interviewId: interview._id,
@@ -148,6 +180,7 @@ import { calculateNextQuestionParams } from '../services/difficultyEngine.servic
 
 export const submitAnswer = async (req, res) => {
     try {
+        const io = getIO();
         const { interviewId, questionIndex, answer, timeTaken } = req.body;
 
         const interview = await Interview.findById(interviewId);
@@ -159,6 +192,8 @@ export const submitAnswer = async (req, res) => {
         if (!question) {
             return res.status(400).json({ message: "Question index out of bounds" });
         }
+        
+        io.to(`interview:${interviewId}`).emit("evaluation:started", { message: "AI is evaluating your answer..." });
 
         // Idempotency: Skip evaluation if already evaluated
         let parsed = null;
@@ -176,14 +211,15 @@ export const submitAnswer = async (req, res) => {
                 question.feedback = "You did not submit an answer.";
                 question.answer = "";
                 await interview.save();
-                parsed = { feedback: question.feedback };
+                parsed = { feedback: question.feedback, finalScore: 0, confidence: 0, communication: 0, correctness: 0 };
             } else if (timeTaken > question.timeLimit) {
                 question.score = 0;
                 question.feedback = "Your Time is Up";
                 question.answer = answer;
                 await interview.save();
-                parsed = { feedback: question.feedback };
+                parsed = { feedback: question.feedback, finalScore: 0, confidence: 0, communication: 0, correctness: 0 };
             } else {
+                io.to(`interview:${interviewId}`).emit("evaluation:processing", { message: "Analyzing technical correctness..." });
                 const messages = [
                 {
                     role: "system",
@@ -243,6 +279,14 @@ export const submitAnswer = async (req, res) => {
                 await interview.save();
             }
         }
+        
+        io.to(`interview:${interviewId}`).emit("evaluation:completed", { 
+            score: parsed.finalScore,
+            feedback: parsed.feedback,
+            confidence: parsed.confidence,
+            communication: parsed.communication,
+            correctness: parsed.correctness
+        });
 
         // Adaptive Generation: If we need more questions, generate the next one
         const totalExpected = interview.totalQuestions || 10;
@@ -253,9 +297,11 @@ export const submitAnswer = async (req, res) => {
             if (interview.question.length > questionIndex + 1) {
                 nextQuestion = interview.question[questionIndex + 1];
             } else {
+                io.to(`interview:${interviewId}`).emit("evaluation:processing", { message: "Determining next question difficulty..." });
                 // Determine params using the Engine
                 const nextParams = calculateNextQuestionParams(interview, questionIndex);
                 
+                io.to(`interview:${interviewId}`).emit("evaluation:processing", { message: "Generating next question..." });
                 // Generate next question
                 const generatedQ = await generateAdaptiveQuestion({
                     role: interview.role,

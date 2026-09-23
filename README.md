@@ -15,6 +15,7 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![OpenRouter](https://img.shields.io/badge/OpenRouter-000000?style=for-the-badge&logo=openai&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=for-the-badge&logo=Stripe&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 
 **A highly scalable, distributed, and AI-powered mock interview platform designed to help Software Engineering (SDE) candidates prepare for high-stakes technical interviews. Built with Enterprise System Design principles to handle millions of concurrent users.**
 
@@ -61,6 +62,13 @@ The core engine of MockMate AI. Candidates upload their resumes in PDF format. T
 * **LLM Abstraction via OpenRouter**: The application integrates with **OpenRouter**, securely routing API requests to models like `openai/gpt-4o-mini` while avoiding vendor lock-in. 
 * **Dynamic Generation**: The LLM evaluates the candidate's exact project details to construct tailored questions like, *"I see you used Redis in your E-commerce project. Can you explain how you handled cache invalidation during high traffic spikes?"*
 
+### ⚡ Real-Time Socket.IO Communication (WebSockets)
+MockMate AI delivers a production-grade real-time experience without relying on inefficient HTTP polling.
+* **Live AI Evaluation Events**: Submitting an interview answer triggers real-time evaluation events (`evaluation:started`, `evaluation:processing`, `evaluation:completed`) directly pushed from the Node.js backend.
+* **Real-Time Resume Parsing**: Uploading a PDF resume displays live processing statuses (Text Extraction, Skill Analysis, AI Prep) streamed instantly via WebSocket events.
+* **Secure Room-Based Broadcasting**: Connections are strictly authenticated using HTTP-Only JWT cookies. Users are placed in private `user:<userId>` rooms and protected `interview:<interviewId>` rooms, guaranteeing absolute data privacy.
+* **Instant Notifications**: Stripe payment success webhooks emit real-time credit updates directly to the connected client, instantly updating their balance across all active tabs.
+
 ### 🧠 Adaptive Question Difficulty Engine (JIT Generation)
 The system leverages a sophisticated **Just-In-Time (JIT) Adaptive Engine**. It doesn't generate a fixed set of questions upfront. Instead, it evaluates candidate performance in real-time.
 * **Deterministic Rules Engine**: Analyzes real-time performance (score, correctness, confidence) against the candidate's base experience level to dynamically adjust difficulty (e.g., scoring 9/10 on an Easy question automatically bumps the next question to Hard).
@@ -103,15 +111,15 @@ graph TD
     Worker1[Node.js Express Worker 1]
     Worker2[Node.js Express Worker 2]
     Worker3[Node.js Express Worker 3]
-    Redis[(Redis - Rate Limiting & Cache)]
+    Redis[(Redis - Rate Limiting, Cache, & Pub/Sub)]
     Mongo[(MongoDB Atlas - Data & Vectors)]
     Stripe[Stripe Payment Gateway]
     OpenAI[OpenAI / OpenRouter API]
 
-    Client -->|HTTP/HTTPS| Nginx
-    Nginx -->|Least Connections Routing| Worker1
-    Nginx -->|Least Connections Routing| Worker2
-    Nginx -->|Least Connections Routing| Worker3
+    Client <-->|HTTP & WebSockets| Nginx
+    Nginx <-->|Least Connections Routing| Worker1
+    Nginx <-->|Least Connections Routing| Worker2
+    Nginx <-->|Least Connections Routing| Worker3
     
     Worker1 <--> Redis
     Worker2 <--> Redis
@@ -130,11 +138,12 @@ Instead of exposing the Node.js server directly to the internet, traffic first h
 * Nginx is configured to use the `least_conn` load balancing algorithm. 
 * It monitors all backend replicas in the Docker network and intelligently forwards the user's request to the container with the fewest active connections, preventing any single server from becoming a bottleneck.
 
-### ⚡ Node.js Multi-Core Clustering
+### ⚡ Node.js Multi-Core Clustering & WebSockets
 A standard Node.js server operates on a single thread. If deployed on a 16-core machine, 15 cores sit completely idle. 
 * MockMate AI overrides this by utilizing the native `cluster` module.
 * The Primary Node process detects the CPU core count (`os.cpus().length`) and immediately `fork()`s an identical Express worker for every core.
 * **Self-Healing**: If an out-of-memory exception kills Worker #4, the Primary process catches the `exit` event and spawns a new worker in milliseconds, resulting in **Zero Downtime**.
+* **Distributed WebSockets**: Socket.IO is integrated seamlessly into this clustered architecture. Using the `@socket.io/redis-adapter`, WebSocket events are published and subscribed to via the central Redis instance. This ensures that if User A is connected to Worker 1 and a webhook event fires on Worker 3, the message is instantly routed to the correct worker and pushed to the client, enabling massive horizontal scaling for real-time events.
 
 ---
 

@@ -11,6 +11,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --detectOpenHandles"
   },
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
     "axios": "^1.13.6",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -25,6 +26,7 @@
     "multer": "^2.1.1",
     "nodemon": "^3.1.14",
     "pdfjs-dist": "^5.5.207",
+    "socket.io": "^4.8.3",
     "stripe": "^22.6.2"
   },
   "devDependencies": {

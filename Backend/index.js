@@ -3,6 +3,8 @@ import db from "./config/db.js";
 import cluster from "cluster";
 import os from "os";
 import app from "./app.js";
+import http from "http";
+import { initSocket } from "./config/socket.js";
 
 dotenv.config();
 
@@ -23,7 +25,10 @@ if (cluster.isPrimary) {
 } else {
     const PORT = process.env.PORT || 8000;
 
-    app.listen(PORT, ()=> {
+    const server = http.createServer(app);
+    initSocket(server);
+
+    server.listen(PORT, ()=> {
         console.log(`Worker ${process.pid} started and listening on ${PORT}`);
         db(); 
     });

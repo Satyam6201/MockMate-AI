@@ -8,6 +8,8 @@ import { setUserData } from '../redux/userSlice';
 
 const Step1SetUp = ({onStart}) => {
   const {userData} = useSelector((state) => state.user);
+  const { resumeProcessing, interviewState } = useSelector((state) => state.socket || {});
+  const interviewGenState = interviewState?.generation;
   const dispatch = useDispatch();
 
   const [role, setRole] = useState("");
@@ -204,7 +206,7 @@ const Step1SetUp = ({onStart}) => {
                       {analyzing ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          Analyzing...
+                          {resumeProcessing ? resumeProcessing.message : "Analyzing..."}
                         </>
                       ) : "Analyze Resume"}
                     </motion.button>
@@ -258,7 +260,7 @@ const Step1SetUp = ({onStart}) => {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generating AI Questions...
+                  {interviewGenState ? interviewGenState.message : "Generating AI Questions..."}
                 </>
               ) : "Start Interview"}
             </motion.button>

@@ -9,12 +9,24 @@ import { serverUrl } from '../App'
 import { BsArrowRight, BsStars } from 'react-icons/bs'
 import toast from 'react-hot-toast'
 import Editor from '@monaco-editor/react'
+import { useSocket } from '../hooks/useSocket'
+import { useSelector, useDispatch } from 'react-redux'
+import { setEvaluationStatus } from '../redux/socketSlice'
 
 const Step2Interview = ({interviewData, onFinish}) => {
 
   const {interviewId, questions, userName, totalQuestions} = interviewData;
   const [interviewQuestions, setInterviewQuestions] = useState(questions);
   const expectedTotal = totalQuestions || 5;
+  const { joinInterviewRoom } = useSocket();
+  const evaluationStatus = useSelector(state => state.socket?.evaluationStatus);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+     if (interviewId) {
+         joinInterviewRoom(interviewId);
+     }
+  }, [interviewId, joinInterviewRoom]);
 
   const [warningsCount, setWarningsCount] = useState(0);
   const [isIntroPhase, setIsIntroPhase] = useState(true);
@@ -236,6 +248,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
   const handleNext = async () => {
     setAnswer("");
     setFeedback("");
+    dispatch(setEvaluationStatus(null));
 
     if (currentIndex + 1 >= expectedTotal) {
       finishInterview();
@@ -505,7 +518,9 @@ const Step2Interview = ({interviewData, onFinish}) => {
                 {isSubmitting ? (
                   <>
                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                     Analyzing Response...
+                     {evaluationStatus?.status === 'started' || evaluationStatus?.status === 'processing' 
+                        ? evaluationStatus.message 
+                        : "Analyzing Response..."}
                   </>
                 ) : "Submit Answer"}
               </motion.button>
@@ -517,7 +532,7 @@ const Step2Interview = ({interviewData, onFinish}) => {
             className='mt-8 bg-green-50 border-2 border-green-200 p-6 sm:p-8 rounded-3xl shadow-sm'
             >
               <h4 className='font-bold text-green-800 mb-2 flex items-center gap-2'>
-                <BsStars /> Instant AI Feedback
+                <BsStars /> Instant AI Feedback {evaluationStatus?.result?.score !== undefined && `- Score: ${evaluationStatus.result.score}/10`}
               </h4>
               <p className='text-gray-700 font-medium mb-6 leading-relaxed'>{feedback}</p>
               
