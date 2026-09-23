@@ -1,8 +1,5 @@
 import { askAi } from './openRouter.services.js';
 
-/**
- * Validates the raw JSON string from the AI to ensure it won't break our DB.
- */
 const validateAiResponse = (responseString) => {
     try {
         const parsed = JSON.parse(responseString);
@@ -20,9 +17,6 @@ const validateAiResponse = (responseString) => {
     }
 };
 
-/**
- * Generates a single adaptive interview question based on the engine's parameters.
- */
 export const generateAdaptiveQuestion = async ({
     role,
     experience,
@@ -33,6 +27,7 @@ export const generateAdaptiveQuestion = async ({
     targetDifficultyLabel,
     targetTopic,
     isFollowUp,
+    questionType,
     previousQuestionsContext // array of previous questions to avoid duplicates
 }) => {
     const projectText = Array.isArray(projects) && projects.length ? projects.join(", ") : "None";
@@ -52,12 +47,22 @@ export const generateAdaptiveQuestion = async ({
         ? `This should be a deep-dive FOLLOW-UP question related to the topic of: ${targetTopic}.` 
         : `Focus the question heavily on this topic: ${targetTopic}.`;
 
+    let typeInstruction = "";
+    if (questionType === "Coding") {
+        typeInstruction = "This MUST be a coding problem. Ask the candidate to write a function or solve an algorithm. Give clear input/output requirements.";
+    } else if (questionType === "Scenario-based") {
+        typeInstruction = "This MUST be a scenario-based question. 'Imagine you are working on... how would you handle...'";
+    } else {
+        typeInstruction = "This MUST be a conceptual question about core principles or definitions.";
+    }
+
     const userPrompt = `
         Role: ${role}
         Experience: ${experience}
         InterviewMode: ${mode}
         Target Difficulty: ${targetDifficultyLabel}
         Target Topic: ${targetTopic}
+        Question Type: ${questionType}
         Projects: ${projectText}
         Skills: ${skillsText}
         Resume: ${safeResume}
@@ -71,9 +76,10 @@ export const generateAdaptiveQuestion = async ({
 
             Strict Rules:
             - The difficulty must match the requested Target Difficulty (${targetDifficultyLabel}).
+            - ${typeInstruction}
             - ${followUpInstruction}
             ${duplicatePrevention}
-            - Keep the question between 15 and 30 words.
+            - Keep the question between 15 and 45 words.
             - It must be practical and realistic.
             
             Return ONLY valid JSON in this exact format, with no markdown formatting or backticks:
@@ -100,7 +106,7 @@ export const generateAdaptiveQuestion = async ({
             throw new Error("AI returned invalid question format");
         }
 
-        return validated;
+        return { ...validated, questionType };
     } catch (error) {
         console.error("Error generating adaptive question:", error);
         throw error;

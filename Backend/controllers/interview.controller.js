@@ -106,6 +106,7 @@ export const generateQuestion =  async (req, res) => {
             role, experience, mode, resumeText, projects, skills,
             targetDifficultyLabel: baselineLabel,
             targetTopic,
+            questionType: "Conceptual", // First question is usually Conceptual
             isFollowUp: false,
             previousQuestionsContext: []
         });
@@ -119,12 +120,13 @@ export const generateQuestion =  async (req, res) => {
             experience,
             mode,
             resumeText,
-            totalQuestions: 5,
+            totalQuestions: 10,
             question: [{
                 question: generatedQ.question,
                 topic: generatedQ.topic,
                 difficulty: baselineLabel,
                 targetDifficulty: baselineScore,
+                questionType: "Conceptual",
                 timeLimit: 60
             }] 
         });
@@ -190,14 +192,14 @@ export const submitAnswer = async (req, res) => {
                         Evaluate naturally and fairly, like a real person would.
                         Score the answer in these areas (0 to 10):
 
-                        1. Confidence – Does the answer sound clear, confident, and well-presented?
-                        2. Communication – Is the language simple, clear, and easy to understand?
-                        3. Correctness – Is the answer accurate, relevant, and complete?
+                    1. Confidence – Does the answer/code seem confident and well-reasoned?
+                    2. Communication – Is the language or code clear, readable, and easy to understand?
+                    3. Correctness – Is the answer or code accurate, relevant, and fully functional?
 
-                    Rules:
-                        - Be realistic and unbiased.
-                        - Do not give random high scores.
-                        - If the answer is weak, score low.
+                Rules:
+                    - Be realistic and unbiased.
+                    - If this is a coding question, prioritize code correctness, logic, and readability.
+                    - If the answer is weak, score low.
                         - If the answer is strong and detailed, score high.
                         - Consider clarity, structure, and relevance.
 
@@ -243,7 +245,7 @@ export const submitAnswer = async (req, res) => {
         }
 
         // Adaptive Generation: If we need more questions, generate the next one
-        const totalExpected = interview.totalQuestions || 5;
+        const totalExpected = interview.totalQuestions || 10;
         let nextQuestion = null;
         
         if (questionIndex + 1 < totalExpected) {
@@ -262,6 +264,7 @@ export const submitAnswer = async (req, res) => {
                     resumeText: interview.resumeText,
                     targetDifficultyLabel: nextParams.targetDifficultyLabel,
                     targetTopic: nextParams.targetTopic,
+                    questionType: nextParams.questionType,
                     isFollowUp: nextParams.isFollowUp,
                     previousQuestionsContext: interview.question.map(q => ({ question: q.question }))
                 });
@@ -272,7 +275,8 @@ export const submitAnswer = async (req, res) => {
                     topic: generatedQ.topic,
                     difficulty: nextParams.targetDifficultyLabel,
                     targetDifficulty: nextParams.targetDifficultyScore,
-                    timeLimit: 90
+                    questionType: nextParams.questionType,
+                    timeLimit: nextParams.timeLimit
                 };
                 
                 interview.question.push(nextQuestion);

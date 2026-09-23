@@ -5,6 +5,7 @@ const questionSchema = new mongoose.Schema({
     difficulty: String, // e.g. "Medium"
     topic: String, // e.g. "React"
     targetDifficulty: Number, // internal score 0-100
+    questionType: String, // e.g. "Conceptual", "Coding", "Scenario"
     timeLimit: Number,
     answer: String,
     feedback: String,
@@ -22,7 +23,7 @@ const interviewSchema = new mongoose.Schema({
     },
     totalQuestions: {
         type: Number,
-        default: 5
+        default: 10
     },
 
     role: {

@@ -8,6 +8,7 @@ import axios from 'axios'
 import { serverUrl } from '../App'
 import { BsArrowRight, BsStars } from 'react-icons/bs'
 import toast from 'react-hot-toast'
+import Editor from '@monaco-editor/react'
 
 const Step2Interview = ({interviewData, onFinish}) => {
 
@@ -440,14 +441,32 @@ const Step2Interview = ({interviewData, onFinish}) => {
           </div>
 
           <div className="relative flex-1 flex flex-col">
-            <textarea placeholder={isMicOn && !isAIPlaying ? 'Listening... Speak now or type here.' : 'Type your answer here...'}
-             onChange={(e) => setAnswer(e.target.value)} value={answer}
-              className={`flex-1 min-h-[150px] bg-gray-50 p-6 pb-12 rounded-3xl resize-none outline-none border-2 transition-all text-gray-800 text-lg shadow-inner
-              ${isMicOn && !isAIPlaying ? 'border-green-200 bg-green-50/30' : 'border-gray-200 focus:border-green-400'}`} 
-            /> 
+            {currentQuestion?.questionType === 'Coding' ? (
+              <div className="flex-1 min-h-[300px] border-2 border-gray-200 rounded-3xl overflow-hidden shadow-inner focus-within:border-green-400 transition-colors">
+                 <Editor
+                   height="100%"
+                   defaultLanguage="javascript"
+                   theme="vs-dark"
+                   value={answer}
+                   onChange={(value) => setAnswer(value || "")}
+                   options={{
+                     minimap: { enabled: false },
+                     fontSize: 14,
+                     wordWrap: 'on',
+                     padding: { top: 16 }
+                   }}
+                 />
+              </div>
+            ) : (
+              <textarea placeholder={isMicOn && !isAIPlaying ? 'Listening... Speak now or type here.' : 'Type your answer here...'}
+               onChange={(e) => setAnswer(e.target.value)} value={answer}
+                className={`flex-1 min-h-[150px] bg-gray-50 p-6 pb-12 rounded-3xl resize-none outline-none border-2 transition-all text-gray-800 text-lg shadow-inner
+                ${isMicOn && !isAIPlaying ? 'border-green-200 bg-green-50/30' : 'border-gray-200 focus:border-green-400'}`} 
+              /> 
+            )}
             
             {/* Real-time Word Count Analyzer */}
-            {!feedback && (
+            {!feedback && currentQuestion?.questionType !== 'Coding' && (
               <div className="absolute bottom-4 left-6 right-6 flex items-center gap-4">
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                   <div className={`h-full transition-all duration-300 ${answerQualityColor}`} style={{ width: `${answerQualityProgress}%` }}></div>
