@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
+import compression from "compression";
 import authRouter from "./router/auth.route.js";
 import userRouter from "./router/user.route.js";
 import interviewRouter from "./router/interview.router.js";
@@ -12,6 +13,9 @@ import { stripeWebhook } from "./controllers/payment.controller.js";
 import { globalLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
+
+// Enable GZIP compression for all responses
+app.use(compression());
 
 app.use(cors({
     origin: "http://localhost:5173",

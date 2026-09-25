@@ -83,20 +83,28 @@ export const calculateNextQuestionParams = (interview, currentQuestionIndex) => 
     let timeLimit = 60; // default 60s
     
     // Using currentQuestionIndex + 1 because this calculates for the *next* question
-    // Example: if currentQuestionIndex is 0 (they just answered Q1), we are calculating for Q2 (index 1).
     const nextIndex = currentQuestionIndex + 1;
 
-    if (nextIndex < 5) {
-        baseScore = 30; // Easy
-        questionType = Math.random() > 0.5 ? "Conceptual" : "Scenario-based";
-    } else if (nextIndex < 8) {
-        baseScore = 50; // Medium
-        questionType = "Scenario-based";
-        timeLimit = 90;
+    if (interview.mode === "Coding Round") {
+        questionType = "Coding";
+        if (nextIndex === 1) {
+            baseScore = 50; // Medium
+        } else {
+            baseScore = 70; // Hard
+        }
     } else {
-        baseScore = 70; // Hard
-        questionType = "Coding"; // Hard questions include coding
-        timeLimit = 180; // 3 minutes for coding
+        if (nextIndex < 5) {
+            baseScore = 30; // Easy
+            questionType = Math.random() > 0.5 ? "Conceptual" : "Scenario-based";
+        } else if (nextIndex < 8) {
+            baseScore = 50; // Medium
+            questionType = "Scenario-based";
+            timeLimit = 90;
+        } else {
+            baseScore = 70; // Hard
+            questionType = "Coding"; // Hard questions include coding
+            timeLimit = 180; // 3 minutes for coding
+        }
     }
 
     // Adjust slightly based on performance, but keep them roughly in their phase band
@@ -107,6 +115,18 @@ export const calculateNextQuestionParams = (interview, currentQuestionIndex) => 
         nextDifficultyScore -= 10;
     }
     nextDifficultyScore = Math.max(10, Math.min(95, nextDifficultyScore));
+    
+    const targetDifficultyLabel = getDifficultyLabel(nextDifficultyScore);
+    
+    if (interview.mode === "Coding Round") {
+        if (targetDifficultyLabel === "Easy" || targetDifficultyLabel === "Beginner") {
+            timeLimit = 1800; // 30 minutes
+        } else if (targetDifficultyLabel === "Medium") {
+            timeLimit = 2700; // 45 minutes
+        } else {
+            timeLimit = 3600; // 1 hour
+        }
+    }
     
     // 3. Topic Selection & Follow-up logic
     const askedTopics = new Set(questions.map(q => q.topic).filter(Boolean));

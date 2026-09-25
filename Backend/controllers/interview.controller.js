@@ -112,7 +112,7 @@ export const generateQuestion =  async (req, res) => {
         }
 
         if (user.credits < 50) {
-            return res.status(400).json({message: "Not enough credits. Minimum 50 required"})
+            return res.status(400).json({message: "Not enough credits! Please recharge your account (Minimum 50 required)."});
         }
 
         io.to(userRoom).emit("interview:generation_progress", { stage: "RESUME_CONTEXT_LOADING", message: "Resume context loaded ✓" });
@@ -144,20 +144,21 @@ export const generateQuestion =  async (req, res) => {
         user.credits -= 50;
         await user.save();
 
+        const isCodingRound = mode === "Coding Round";
         const interview = await Interview.create({
             userId: user._id,
             role,
             experience,
             mode,
             resumeText,
-            totalQuestions: 10,
+            totalQuestions: isCodingRound ? 3 : 10,
             question: [{
                 question: generatedQ.question,
                 topic: generatedQ.topic,
                 difficulty: baselineLabel,
                 targetDifficulty: baselineScore,
-                questionType: "Conceptual",
-                timeLimit: 60
+                questionType: isCodingRound ? "Coding" : "Conceptual",
+                timeLimit: isCodingRound ? (baselineLabel === "Easy" || baselineLabel === "Beginner" ? 1800 : baselineLabel === "Medium" ? 2700 : 3600) : 60
             }] 
         });
         
@@ -234,10 +235,10 @@ export const submitAnswer = async (req, res) => {
 
                 Rules:
                     - Be realistic and unbiased.
-                    - If this is a coding question, prioritize code correctness, logic, and readability.
-                    - If the answer is weak, score low.
-                        - If the answer is strong and detailed, score high.
-                        - Consider clarity, structure, and relevance.
+                    - If this is a coding question, prioritize logic, process, and readability. If the code is 100% correct and optimal, award full points (10/10) for Correctness. If the code is partially correct, contains bugs, or uses a brute-force approach, AWARD PARTIAL POINTS (e.g. 3-8) based on the candidate's logical process, problem-solving approach, and effort. DO NOT give a 0 if they attempted the logic.
+                    - If the answer is weak or blank, score low.
+                    - If the answer is strong and detailed, score high.
+                    - Consider clarity, structure, and relevance.
 
                     Calculate:
                     finalScore = average of confidence, communication, and correctness (rounded to nearest whole number).

@@ -49,7 +49,11 @@ export const generateAdaptiveQuestion = async ({
 
     let typeInstruction = "";
     if (questionType === "Coding") {
-        typeInstruction = "This MUST be a coding problem. Ask the candidate to write a function or solve an algorithm. Give clear input/output requirements.";
+        if (mode === "Coding Round") {
+            typeInstruction = "This MUST be a coding problem. Ask the candidate to write a function or solve a problem related strictly to Data Structures and Algorithms (DSA) or Web Development, tailored precisely to their experience level. Give clear input/output requirements.";
+        } else {
+            typeInstruction = "This MUST be a coding problem. Ask the candidate to write a function or solve an algorithm. Give clear input/output requirements.";
+        }
     } else if (questionType === "Scenario-based") {
         typeInstruction = "This MUST be a scenario-based question. 'Imagine you are working on... how would you handle...'";
     } else {

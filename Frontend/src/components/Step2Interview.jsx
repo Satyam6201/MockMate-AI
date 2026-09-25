@@ -455,21 +455,42 @@ const Step2Interview = ({interviewData, onFinish}) => {
 
           <div className="relative flex-1 flex flex-col">
             {currentQuestion?.questionType === 'Coding' ? (
-              <div className="flex-1 min-h-[300px] border-2 border-gray-200 rounded-3xl overflow-hidden shadow-inner focus-within:border-green-400 transition-colors">
-                 <Editor
-                   height="100%"
-                   defaultLanguage="javascript"
-                   theme="vs-dark"
-                   value={answer}
-                   onChange={(value) => setAnswer(value || "")}
-                   options={{
-                     minimap: { enabled: false },
-                     fontSize: 14,
-                     wordWrap: 'on',
-                     padding: { top: 16 }
-                   }}
-                 />
-              </div>
+              <motion.div 
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, type: 'spring' }}
+                className="flex-1 min-h-[350px] flex flex-col bg-gray-900 border-2 border-gray-800 rounded-3xl overflow-hidden shadow-2xl focus-within:border-green-500 focus-within:shadow-[0_0_30px_rgba(34,197,94,0.3)] transition-all relative group">
+                 
+                 {/* Fake IDE Header */}
+                 <div className="bg-gray-800 px-4 py-3 flex items-center justify-between border-b border-gray-700">
+                    <div className="flex gap-2">
+                       <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                       <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                       <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    </div>
+                    <span className="text-gray-400 text-xs font-mono tracking-widest uppercase">solution.js</span>
+                    <div className="w-12"></div>
+                 </div>
+
+                 <div className="flex-1 relative">
+                   <Editor
+                     height="100%"
+                     defaultLanguage="javascript"
+                     theme="vs-dark"
+                     value={answer}
+                     onChange={(value) => setAnswer(value || "")}
+                     options={{
+                       minimap: { enabled: false },
+                       fontSize: 15,
+                       wordWrap: 'on',
+                       padding: { top: 20 },
+                       fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+                       smoothScrolling: true,
+                       cursorBlinking: "smooth"
+                     }}
+                   />
+                 </div>
+              </motion.div>
             ) : (
               <textarea placeholder={isMicOn && !isAIPlaying ? 'Listening... Speak now or type here.' : 'Type your answer here...'}
                onChange={(e) => setAnswer(e.target.value)} value={answer}

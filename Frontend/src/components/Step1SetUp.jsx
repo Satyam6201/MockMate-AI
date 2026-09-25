@@ -5,6 +5,7 @@ import axios from 'axios';
 import { serverUrl } from '../App';
 import { useDispatch, useSelector } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
+import toast from 'react-hot-toast';
 
 const Step1SetUp = ({onStart}) => {
   const {userData} = useSelector((state) => state.user);
@@ -65,6 +66,8 @@ const Step1SetUp = ({onStart}) => {
 
     } catch (error) {
       console.log(error);
+      const errorMessage = error.response?.data?.message || "Something went wrong!";
+      toast.error(errorMessage);
       setLoading(false);
     }
   }
@@ -172,6 +175,7 @@ const Step1SetUp = ({onStart}) => {
               >
                 <option value="Technical">💻 Technical Interview</option>
                 <option value="HR">🤝 HR & Behavioral Interview</option>
+                <option value="Coding Round">⚡ Coding Round (DSA & Web Dev)</option>
               </select>
             </div>
 
