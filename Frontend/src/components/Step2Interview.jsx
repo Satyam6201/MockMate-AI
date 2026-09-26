@@ -78,11 +78,19 @@ const Step2Interview = ({interviewData, onFinish}) => {
     };
 
     loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;    
+    // Fix: Use addEventListener instead of assignment so the listener can be cleaned up
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+    };
   }, []);
 
   const videoSource = voiceGender === "male" ? maleVideo : femaleVideo;
   
+  // Fix: Use a ref to track isMicOn to avoid stale closure inside utterance.onend callbacks
+  const isMicOnRef = useRef(isMicOn);
+  useEffect(() => { isMicOnRef.current = isMicOn; }, [isMicOn]);
+
   const speakText = (text) => {
     return new Promise((resolve) => {
       if (!window.speechSynthesis || !selectedVoice) {
@@ -105,11 +113,15 @@ const Step2Interview = ({interviewData, onFinish}) => {
       };
 
       utterance.onend = () => {
-        videoRef.current?.pause();
-        videoRef.current.currentTime = 0;
+        // Fix: Added optional chaining on both — videoRef.current could be null if component unmounts
+        if (videoRef.current) {
+          videoRef.current.pause();
+          videoRef.current.currentTime = 0;  // was crashing without null check
+        }
         setIsAIPlaying(false);
 
-        if (isMicOn) {
+        // Fix: Use isMicOnRef.current (not isMicOn) to avoid stale closure
+        if (isMicOnRef.current) {
           startMic();
         }
 
@@ -117,6 +129,17 @@ const Step2Interview = ({interviewData, onFinish}) => {
           setSubtitle("");
           resolve();
         }, 300); 
+      };
+
+      utterance.onerror = (e) => {
+        // Handle speech synthesis errors gracefully
+        console.error("[speakText] Speech synthesis error:", e.error);
+        if (videoRef.current) {
+          videoRef.current.pause();
+          videoRef.current.currentTime = 0;
+        }
+        setIsAIPlaying(false);
+        resolve(); // Always resolve so the interview flow continues
       };
 
       setSubtitle(text);
@@ -240,8 +263,14 @@ const Step2Interview = ({interviewData, onFinish}) => {
         setIsSubmitting(false);
 
     } catch (error) {
-      console.log(error);
+      // Fix: AI failure was completely silent — user was stuck forever
+      // Now show a clear error toast and reset submitting state so they can retry
+      console.error("[submitAnswer] Error:", error?.response?.data || error.message);
+      const errMsg = error?.response?.data?.message || "AI evaluation failed. Please try again.";
+      toast.error(errMsg, { duration: 5000 });
       setIsSubmitting(false);
+      // Provide fallback feedback so the interview can continue
+      setFeedback("Unable to evaluate at this time. Please proceed to the next question.");
     }
   }
 
@@ -269,10 +298,14 @@ const Step2Interview = ({interviewData, onFinish}) => {
 
     try {
       const result = await axios.post(serverUrl + "/api/interview/finish", 
-        { interviewId }, {withCredentials: true})
-        onFinish(result.data);
+        { interviewId }, {withCredentials: true});
+      onFinish(result.data);
     } catch (error) {
-      console.log(error);
+      // Fix: onFinish was never called on error — user stuck on Step 2 forever
+      console.error("[finishInterview] Error:", error?.response?.data || error.message);
+      toast.error("Could not save final results. Showing local summary.", { duration: 4000 });
+      // Still call onFinish with what we have so the user sees some report
+      onFinish({ finalScore: 0, message: "Results partially saved" });
     }
   }
 

@@ -95,18 +95,21 @@ const Chatbot = () => {
         setMessages(prev => [...prev, { sender: 'bot', text: "Sorry, I ran into an error. Please try again." }]);
       }
     } catch (error) {
-      console.error(error);
+      console.error("[Chatbot] API error:", error?.response?.data || error.message);
       setMessages(prev => [...prev, { sender: 'bot', text: "Oops! My servers are a little overloaded right now. Please try again in a moment." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+  // Fix: Guard with isLoading to prevent double API calls on rapid Enter presses
+  // Fix: Use onKeyDown instead of deprecated onKeyPress
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !isLoading) {
       handleSend();
     }
   };
+
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
@@ -194,7 +197,7 @@ const Chatbot = () => {
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder={isListening ? "Listening..." : "Ask me anything..."}
                 className="flex-1 bg-gray-100 rounded-full px-4 py-2 outline-none focus:ring-2 focus:ring-green-500 transition-all text-sm"
                 disabled={isLoading}

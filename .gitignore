@@ -29,6 +29,9 @@ coverage/
 uploads/
 temp/
 tmp/
+Backend/public/*.pdf
+Backend/public/*
+!Backend/public/.gitkeep
 
 .DS_Store
 Thumbs.db

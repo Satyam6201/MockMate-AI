@@ -15,15 +15,38 @@ export const getDifficultyLabel = (score) => {
     return "Expert";
 };
 
-export const getBaselineDifficulty = (role, experience) => {
+export const getBaselineDifficulty = (role = "", experience = "") => {
     let baseScore = 40; // Default Easy/Medium
 
-    const expLower = experience.toLowerCase();
-    if (expLower.includes('senior') || expLower.includes('lead') || expLower.includes('5+') || expLower.includes('8+')) {
+    const combined = `${role} ${experience}`.toLowerCase();
+
+    // Check senior/lead keywords or >= 5 years of experience
+    const yearsMatch = combined.match(/(\d+)\s*(?:\+)?\s*(?:year|yr)/i);
+    const years = yearsMatch ? parseInt(yearsMatch[1], 10) : null;
+
+    if (
+        combined.includes('senior') || 
+        combined.includes('lead') || 
+        combined.includes('principal') || 
+        combined.includes('architect') ||
+        combined.includes('5+') || 
+        combined.includes('8+') ||
+        (years !== null && years >= 5)
+    ) {
         baseScore = 70; // Hard
-    } else if (expLower.includes('mid') || expLower.includes('3') || expLower.includes('4')) {
+    } else if (
+        combined.includes('mid') || 
+        (years !== null && years >= 2 && years < 5) ||
+        combined.includes('3') || 
+        combined.includes('4')
+    ) {
         baseScore = 50; // Medium
-    } else if (expLower.includes('fresher') || expLower.includes('junior') || expLower.includes('0') || expLower.includes('1')) {
+    } else if (
+        combined.includes('fresher') || 
+        combined.includes('junior') || 
+        combined.includes('intern') ||
+        (years !== null && years <= 1)
+    ) {
         baseScore = 30; // Easy
     }
 

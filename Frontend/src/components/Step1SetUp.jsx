@@ -40,12 +40,15 @@ const Step1SetUp = ({onStart}) => {
       setExperience(result.data.experience || "");
       setProjects(result.data.projects || []);
       setSkills(result.data.skills || []);
-      setResumeFile(result.data.resumeFile || "");
+      setResumeText(result.data.resumeText || "");
       setAnalysisDone(true);
       setAnalyzing(false);
+      toast.success("Resume analyzed successfully!");
 
     } catch (error) {
-      console.log(error);
+      console.error("[Step1SetUp] Resume upload failed:", error);
+      const errMsg = error.response?.data?.message || "Failed to analyze resume. Please try again or fill manually.";
+      toast.error(errMsg);
       setAnalyzing(false);
     }
   }

@@ -61,31 +61,57 @@ export const analyzeResume = async (req, res) => {
 
         io.to(userRoom).emit("resume:stage", { stage: "AI_CONTEXT_PREPARATION", progress: 75, message: "Preparing AI context..." });
         const aiResponse = await askAi(messages);
-        const parsed = JSON.parse(aiResponse);
-        fs.unlinkSync(filePath);
-        
+
+        // Fix: AI sometimes wraps response in markdown fences — strip before parsing
+        const cleanAiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+        let parsed;
+        try {
+            parsed = JSON.parse(cleanAiResponse);
+        } catch (parseError) {
+            console.error("[analyzeResume] AI returned non-JSON. Using fallback structure.");
+            // Graceful degradation: return raw text with empty structured fields
+            parsed = { role: "Software Engineer", experience: "Not specified", projects: [], skills: [] };
+        }
+
+        // Clean up uploaded file after processing
+        try { fs.unlinkSync(filePath); } catch (e) { /* ignore cleanup errors */ }
+
         io.to(userRoom).emit("resume:stage", { stage: "PROCESSING_COMPLETED", progress: 100, message: "Finalizing..." });
         setTimeout(() => {
              io.to(userRoom).emit("resume:completed", { message: "Ready" });
         }, 500);
 
         res.json({
-            role: parsed.role,
-            experience: parsed.experience,
-            projects: parsed.projects,
-            skills: parsed.skills,
+            role: parsed.role || "Software Engineer",
+            experience: parsed.experience || "Not specified",
+            projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+            skills: Array.isArray(parsed.skills) ? parsed.skills : [],
             resumeText
         });
 
     } catch (error) {
-        console.log(error);
+        console.error("[analyzeResume] Error:", error.message);
 
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
+        // Handle multer file type rejection
+        if (error.message?.includes('INVALID_FILE_TYPE')) {
+            return res.status(400).json({ message: "Only PDF files are allowed for resume upload." });
         }
-        res.status(500).json({message: error.message});
+
+        // Clean up file on any error
+        if (req.file && fs.existsSync(req.file.path)) {
+            try { fs.unlinkSync(req.file.path); } catch (e) { /* ignore */ }
+        }
+
+        // Emit failure so frontend doesn't hang on loading state
+        try {
+            const io = getIO();
+            io.to(`user:${req.userId}`).emit("resume:error", { message: "Resume processing failed. Please try again." });
+        } catch (e) { /* ignore socket errors during error handling */ }
+
+        res.status(500).json({ message: error.message || "Failed to process resume" });
     }
 }
+
 
 import { getBaselineDifficulty, getDifficultyLabel, extractTopics } from '../services/difficultyEngine.service.js';
 import { generateAdaptiveQuestion } from '../services/questionGenerator.service.js';
@@ -134,17 +160,17 @@ export const generateQuestion =  async (req, res) => {
             role, experience, mode, resumeText, projects, skills,
             targetDifficultyLabel: baselineLabel,
             targetTopic,
-            questionType: "Conceptual", // First question is usually Conceptual
+            questionType: "Conceptual", // First question is always Conceptual
             isFollowUp: false,
             previousQuestionsContext: []
         });
         
         io.to(userRoom).emit("interview:generation_progress", { stage: "QUESTION_GENERATION_COMPLETED", message: "Preparing interview session..." });
 
-        user.credits -= 50;
-        await user.save();
-
         const isCodingRound = mode === "Coding Round";
+
+        // Fix: Create interview FIRST, then deduct credits atomically
+        // This prevents losing credits if the DB save fails
         const interview = await Interview.create({
             userId: user._id,
             role,
@@ -161,16 +187,24 @@ export const generateQuestion =  async (req, res) => {
                 timeLimit: isCodingRound ? (baselineLabel === "Easy" || baselineLabel === "Beginner" ? 1800 : baselineLabel === "Medium" ? 2700 : 3600) : 60
             }] 
         });
+
+        // Only deduct credits after interview is safely created (atomic $inc avoids race conditions)
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            { $inc: { credits: -50 } },
+            { new: true }
+        );
         
         io.to(userRoom).emit("interview:generation_progress", { stage: "INTERVIEW_READY", message: "Interview Ready!" });
 
         res.json({
             interviewId: interview._id,
-            creditsLeft: user.credits,
+            creditsLeft: updatedUser?.credits ?? (user.credits - 50),
             userName: user.name,
             questions: interview.question,
             totalQuestions: interview.totalQuestions
         });
+
 
     } catch (error) {
         return res.status(500).json({message: `Failed to create interview: ${error.message}`});
@@ -268,12 +302,32 @@ export const submitAnswer = async (req, res) => {
                 }];
 
                 const aiResponse = await askAi(messages);
-                parsed = JSON.parse(aiResponse);
+
+                // Fix: AI sometimes returns markdown-wrapped JSON — strip before parsing
+                const cleanAiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+                try {
+                    parsed = JSON.parse(cleanAiResponse);
+                    // Validate parsed scores are numbers in range 0-10
+                    parsed.confidence = Math.min(10, Math.max(0, Number(parsed.confidence) || 5));
+                    parsed.communication = Math.min(10, Math.max(0, Number(parsed.communication) || 5));
+                    parsed.correctness = Math.min(10, Math.max(0, Number(parsed.correctness) || 5));
+                    parsed.finalScore = Math.min(10, Math.max(0, Number(parsed.finalScore) || 5));
+                    parsed.feedback = parsed.feedback || "Good effort. Keep practicing.";
+                } catch (parseError) {
+                    // AI returned non-JSON — graceful degradation: neutral score instead of crashing
+                    console.error("[submitAnswer] AI returned non-JSON evaluation. Using fallback scores.");
+                    parsed = {
+                        confidence: 5, communication: 5, correctness: 5,
+                        finalScore: 5,
+                        feedback: "Unable to evaluate at this time. Neutral score applied."
+                    };
+                }
 
                 question.answer = answer;
                 question.confidence = parsed.confidence;
                 question.communication = parsed.communication;
                 question.correctness = parsed.correctness;
+
                 question.score = parsed.finalScore;
                 question.feedback = parsed.feedback;
                 

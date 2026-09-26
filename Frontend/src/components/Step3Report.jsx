@@ -13,10 +13,16 @@ const Step3Report = ({report}) => {
 
   if (!report) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-        <div className="flex flex-col items-center">
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 p-6'>
+        <div className="flex flex-col items-center text-center max-w-md bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
            <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-           <p className='text-gray-500 text-lg font-medium'>Generating Detailed Report...</p>
+           <p className='text-gray-700 text-lg font-semibold mb-2'>Generating Detailed Report...</p>
+           <p className='text-gray-500 text-sm mb-6'>If this takes too long, you can check your past interview history.</p>
+           <button 
+             onClick={() => navigate('/history')}
+             className='px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-all text-sm'>
+             View Interview History
+           </button>
         </div>
       </div>
     )
@@ -157,17 +163,30 @@ const Step3Report = ({report}) => {
     toast.success("PDF Downloaded Successfully!");
   };
 
-  const shareReport = () => {
+  const shareReport = async () => {
     const shareText = `I just scored a ${finalScore}/10 on my AI Mock Interview at MockMate AI! \n\nPerformance: ${performanceText}\n\nCan you beat my score? Try it out!`;
     if (navigator.share) {
-      navigator.share({
-        title: 'My MockMate AI Score',
-        text: shareText,
-        url: window.location.href,
-      }).catch(err => console.log('Share failed:', err));
+      try {
+        await navigator.share({
+          title: 'My MockMate AI Score',
+          text: shareText,
+          url: window.location.href,
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('[Step3Report] Share failed:', err);
+        }
+      }
+    } else if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareText + " " + window.location.href);
+        toast.success("Score copied to clipboard! Share it anywhere.");
+      } catch (err) {
+        console.error('[Step3Report] Clipboard copy failed:', err);
+        toast.error("Could not copy to clipboard. Please copy link manually.");
+      }
     } else {
-      navigator.clipboard.writeText(shareText + " " + window.location.href);
-      toast.success("Score copied to clipboard! Share it anywhere.");
+      toast.error("Sharing is not supported on this browser.");
     }
   };
 

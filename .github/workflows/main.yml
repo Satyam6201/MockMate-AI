@@ -32,9 +32,8 @@ jobs:
     - name: Install Dependencies
       run: npm ci
 
-    # In a real environment, you would run tests here
-    # - name: Run Tests
-    #   run: npm test
+    - name: Run Backend Unit Tests
+      run: npm test -- tests/difficultyEngine.test.js --forceExit
 
   build-and-test-frontend:
     runs-on: ubuntu-latest
