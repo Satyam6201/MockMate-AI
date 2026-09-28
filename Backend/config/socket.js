@@ -34,11 +34,29 @@ export const initSocket = (httpServer) => {
     });
 
     // Redis Adapter for horizontal scaling (Cluster mode support)
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    const pubClient = new Redis(redisUrl);
-    const subClient = pubClient.duplicate();
+    if (process.env.REDIS_URL) {
+        try {
+            const pubClient = new Redis(process.env.REDIS_URL, {
+                maxRetriesPerRequest: 3,
+                enableOfflineQueue: false
+            });
+            const subClient = pubClient.duplicate();
 
-    io.adapter(createAdapter(pubClient, subClient));
+            pubClient.on("error", (err) => {
+                console.error("[Socket Redis Pub Error]:", err.message);
+            });
+            subClient.on("error", (err) => {
+                console.error("[Socket Redis Sub Error]:", err.message);
+            });
+
+            io.adapter(createAdapter(pubClient, subClient));
+            console.log("✅ Socket.IO Redis adapter enabled");
+        } catch (err) {
+            console.error("⚠️ Failed to initialize Socket Redis adapter:", err.message);
+        }
+    } else {
+        console.log("ℹ️ Running Socket.IO with in-memory adapter");
+    }
 
     // Middleware for authentication
     io.use((socket, next) => {

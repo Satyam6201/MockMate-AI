@@ -10,6 +10,9 @@ import redis from '../config/redis.js';
  */
 
 const createRedisStore = (prefix) => {
+    if (!redis) {
+        return undefined; // express-rate-limit falls back to memory store
+    }
     try {
         return new RedisStore({
             sendCommand: (...args) => redis.call(...args),
