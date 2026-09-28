@@ -8,28 +8,36 @@ import { initSocket } from "./config/socket.js";
 
 dotenv.config();
 
-const numCPUs = os.cpus().length;
-
-if (cluster.isPrimary) {
-    console.log(`Primary ${process.pid} is running`);
-    console.log(`Setting up ${numCPUs} workers to handle high scale load...`);
-
-    for (let i = 0; i < numCPUs; i++) {
-        cluster.fork();
-    }
-
-    cluster.on("exit", (worker, code, signal) => {
-        console.log(`Worker ${worker.process.pid} died. Spawning a new one...`);
-        cluster.fork();
-    });
-} else {
+const startServer = () => {
     const PORT = process.env.PORT || 8000;
-
     const server = http.createServer(app);
     initSocket(server);
 
-    server.listen(PORT, ()=> {
-        console.log(`Worker ${process.pid} started and listening on ${PORT}`);
+    server.listen(PORT, () => {
+        console.log(`Server (PID ${process.pid}) listening on port ${PORT}`);
         db(); 
     });
+};
+
+const isClusterEnabled = process.env.ENABLE_CLUSTER === "true";
+
+if (isClusterEnabled) {
+    const numCPUs = os.cpus().length;
+    if (cluster.isPrimary) {
+        console.log(`Primary ${process.pid} is running`);
+        console.log(`Setting up ${numCPUs} workers to handle high scale load...`);
+
+        for (let i = 0; i < numCPUs; i++) {
+            cluster.fork();
+        }
+
+        cluster.on("exit", (worker, code, signal) => {
+            console.log(`Worker ${worker.process.pid} died. Spawning a new one...`);
+            cluster.fork();
+        });
+    } else {
+        startServer();
+    }
+} else {
+    startServer();
 }

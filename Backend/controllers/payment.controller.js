@@ -22,7 +22,8 @@ export const createCheckoutSession = async (req, res) => {
                 stripeSessionId: mockSessionId,
                 status: "created"
             });
-            const mockUrl = `http://localhost:5173/payment-success?session_id=${mockSessionId}`;
+            const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+            const mockUrl = `${frontendUrl}/payment-success?session_id=${mockSessionId}`;
             return res.json({ id: mockSessionId, url: mockUrl });
         }
 
