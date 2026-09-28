@@ -57,6 +57,15 @@ app.use((req, res, next) => {
 // Apply global rate limiting to all requests
 app.use(globalLimiter);
 
+// Root & Health Check Endpoints
+app.get("/", (req, res) => {
+    res.status(200).json({ status: "healthy", message: "MockMate AI Backend is running" });
+});
+
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "healthy", timestamp: new Date().toISOString() });
+});
+
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/interview", interviewRouter);
