@@ -465,9 +465,15 @@ export const getInterviewReport = async (req, res) => {
         const cacheKey = `interview_report:${interviewId}`;
 
         // 1. Check Redis Cache
-        const cachedReport = await redis.get(cacheKey);
-        if (cachedReport) {
-            return res.json(JSON.parse(cachedReport));
+        if (redis) {
+            try {
+                const cachedReport = await redis.get(cacheKey);
+                if (cachedReport) {
+                    return res.json(JSON.parse(cachedReport));
+                }
+            } catch (err) {
+                console.warn("[Redis Report Cache Read Warning]:", err.message);
+            }
         }
 
         const interview = await Interview.findById(interviewId);
@@ -501,11 +507,17 @@ export const getInterviewReport = async (req, res) => {
         };
 
         // 2. Store in Redis Cache for 1 hour (3600 seconds)
-        await redis.set(cacheKey, JSON.stringify(reportData), 'EX', 3600);
+        if (redis) {
+            try {
+                await redis.set(cacheKey, JSON.stringify(reportData), 'EX', 3600);
+            } catch (err) {
+                console.warn("[Redis Report Cache Write Warning]:", err.message);
+            }
+        }
 
         return res.json(reportData);
 
     } catch (error) {
-        return res.status(500).json({ message: `failed to find currentuser interview report ${error}`});
+        return res.status(500).json({ message: `failed to find currentuser interview report ${error.message || error}`});
     }
 }
