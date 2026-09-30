@@ -23,7 +23,7 @@ const Preparation = lazy(() => import("./pages/Preparation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 import Chatbot from "./components/Chatbot";
 
-export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8080";
+export const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? "https://mockmate-ai-se1m.onrender.com" : "http://localhost:8080");
 
 const App = () => {
   const dispatch = useDispatch();

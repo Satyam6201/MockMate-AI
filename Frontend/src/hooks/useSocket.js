@@ -5,7 +5,7 @@ import { setConnectionStatus, setEvaluationStatus, setInterviewState, setResumeP
 import { setUserData } from "../redux/userSlice";
 import toast from "react-hot-toast";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:8080";
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? "https://mockmate-ai-se1m.onrender.com" : "http://localhost:8080");
 
 let socketInstance = null;
 
