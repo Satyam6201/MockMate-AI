@@ -263,8 +263,6 @@ const Step2Interview = ({interviewData, onFinish}) => {
         setIsSubmitting(false);
 
     } catch (error) {
-      // Fix: AI failure was completely silent — user was stuck forever
-      // Now show a clear error toast and reset submitting state so they can retry
       console.error("[submitAnswer] Error:", error?.response?.data || error.message);
       const errMsg = error?.response?.data?.message || "AI evaluation failed. Please try again.";
       toast.error(errMsg, { duration: 5000 });
@@ -301,10 +299,8 @@ const Step2Interview = ({interviewData, onFinish}) => {
         { interviewId }, {withCredentials: true});
       onFinish(result.data);
     } catch (error) {
-      // Fix: onFinish was never called on error — user stuck on Step 2 forever
       console.error("[finishInterview] Error:", error?.response?.data || error.message);
       toast.error("Could not save final results. Showing local summary.", { duration: 4000 });
-      // Still call onFinish with what we have so the user sees some report
       onFinish({ finalScore: 0, message: "Results partially saved" });
     }
   }

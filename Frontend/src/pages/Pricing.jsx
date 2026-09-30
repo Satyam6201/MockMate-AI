@@ -64,7 +64,6 @@ const Pricing = () => {
   ];
 
    const handlePayment = async (plan) => {
-    // SECURITY CHECK: Ensure user is logged in before paying
     if (!userData) {
       setShowAuth(true);
       return;

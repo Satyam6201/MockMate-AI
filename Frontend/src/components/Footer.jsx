@@ -144,7 +144,7 @@ const Footer = () => {
                 AI Powered
               </span>
               <span className="inline-flex items-center gap-1.5 bg-white/5 text-gray-400 border border-white/10 text-xs font-bold px-3 py-1.5 rounded-full">
-                🔒 SOC 2 Compliant
+                SOC 2 Compliant
               </span>
             </div>
 

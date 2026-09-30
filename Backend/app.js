@@ -45,7 +45,7 @@ app.post("/api/payment/webhook", express.raw({ type: 'application/json' }), stri
 app.use(express.json());
 app.use(cookieParser());
 
-// --- SECURITY MIDDLEWARES ---
+// SECURITY MIDDLEWARES 
 app.use(helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }

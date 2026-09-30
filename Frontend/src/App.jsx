@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { setUserData } from "./redux/userSlice";
 import { Toaster } from "react-hot-toast";
 import { useSocket } from "./hooks/useSocket.js";
+import Chatbot from "./components/Chatbot";
 
 // Lazy Loaded Pages (Code Splitting for performance)
 const Home = lazy(() => import("./pages/Home"));
@@ -21,7 +22,6 @@ const Help = lazy(() => import("./pages/HelpCenter"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Preparation = lazy(() => import("./pages/Preparation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-import Chatbot from "./components/Chatbot";
 
 export const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? "https://mockmate-ai-se1m.onrender.com" : "http://localhost:8080");
 
