@@ -8,12 +8,19 @@ import axios from "axios";
 import { serverUrl } from '../App.jsx'
 import { useDispatch } from 'react-redux'
 import { setUserData } from '../redux/userSlice.js'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import React, { useState } from 'react'
 
 const Auth = ({isModel = false}) => {
 
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     const handleGoogleAuth = async () => {
+        if (loading) return;
+        setLoading(true);
         try {
             const response = await signInWithPopup(auth, provider);
             let User = response.user;
@@ -21,13 +28,21 @@ const Auth = ({isModel = false}) => {
             let email = User.email;
             const result = await axios.post(serverUrl + "/api/auth/google", 
                 {name, email}, {withCredentials: true}
-            )
+            );
 
             dispatch(setUserData(result.data));
-            
+            toast.success(`Welcome ${name || 'back'}!`);
+            if (!isModel) {
+                navigate("/");
+            }
         } catch (error) {
-            console.log(error);
+            console.error("Authentication error:", error);
+            if (error.code !== "auth/popup-closed-by-user") {
+                toast.error(error?.response?.data?.message || error.message || "Sign in failed");
+            }
             dispatch(setUserData(null));
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -69,14 +84,19 @@ const Auth = ({isModel = false}) => {
                 track your progress, and unlock detailed performance insights.
             </p>
 
-            <motion.button onClick={handleGoogleAuth}
-            whileHover={{opacity: 0.8, scale: 1.03}} 
-            whileTap={{opacity: 1, scale: 0.98}}
-            className='w-full flex items-center justify-center
-            gap-3 py-3 bg-black text-white rounded-full shadow-md'
+            <motion.button 
+                onClick={handleGoogleAuth}
+                disabled={loading}
+                whileHover={{opacity: 0.8, scale: loading ? 1 : 1.03}} 
+                whileTap={{opacity: 1, scale: loading ? 1 : 0.98}}
+                className={`w-full flex items-center justify-center gap-3 py-3 bg-black text-white rounded-full shadow-md ${loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
             >
-                <FcGoogle size={20} />
-                Continue with Google
+                {loading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                    <FcGoogle size={20} />
+                )}
+                {loading ? "Signing in..." : "Continue with Google"}
             </motion.button>
 
         </motion.div>

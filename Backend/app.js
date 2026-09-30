@@ -46,7 +46,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // --- SECURITY MIDDLEWARES ---
-app.use(helmet());
+app.use(helmet({
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use((req, res, next) => {
     if (req.body) mongoSanitize.sanitize(req.body);
     if (req.params) mongoSanitize.sanitize(req.params);

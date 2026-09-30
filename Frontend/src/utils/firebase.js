@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_APIKEY,
+  apiKey: import.meta.env.VITE_FIREBASE_APIKEY || "AIzaSyAFtVa6wkelACvAv5lLIZ5tAFsqGYSrSGs",
   authDomain: "mockmate-ai-53a47.firebaseapp.com",
   projectId: "mockmate-ai-53a47",
   storageBucket: "mockmate-ai-53a47.firebasestorage.app",
@@ -14,5 +14,8 @@ const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export { auth, provider } 
