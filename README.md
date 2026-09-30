@@ -10,14 +10,21 @@
 ![Redis](https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-%2346E3B7.svg?style=for-the-badge&logo=render&logoColor=white)
 ![Jest](https://img.shields.io/badge/-jest-%23C21325?style=for-the-badge&logo=jest&logoColor=white)
-![Framer](https://img.shields.io/badge/Framer_Motion-black?style=for-the-badge&logo=framer&logoColor=blue)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![OpenRouter](https://img.shields.io/badge/OpenRouter-000000?style=for-the-badge&logo=openai&logoColor=white)
-![Stripe](https://img.shields.io/badge/Stripe-626CD9?style=for-the-badge&logo=Stripe&logoColor=white)
 ![Socket.IO](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 
 **A highly scalable, distributed, and AI-powered mock interview platform designed to help Software Engineering (SDE) candidates prepare for high-stakes technical interviews. Built with Enterprise System Design principles to handle millions of concurrent users.**
+
+### 🌐 Live Production Deployments
+
+| Component | Platform | URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend Application** | **Vercel** | [https://mock-mate-ai-flame.vercel.app](https://mock-mate-ai-flame.vercel.app/) | ![Deployed](https://img.shields.io/badge/Vercel-Live-success?style=flat-square&logo=vercel) |
+| **Backend REST & WebSocket API** | **Render** | [https://mockmate-ai-se1m.onrender.com](https://mockmate-ai-se1m.onrender.com/) | ![Live](https://img.shields.io/badge/Render-Live-success?style=flat-square&logo=render) |
 
 </div>
 
