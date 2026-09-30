@@ -8,21 +8,20 @@ import Redis from 'ioredis';
  * - Error events are handled to prevent uncaught exception crashes
  */
 const redisUrl = process.env.REDIS_URL;
+const isLocalhostRedisInProd = process.env.NODE_ENV === "production" && redisUrl && redisUrl.includes("localhost");
 
 let redis = null;
 
-if (redisUrl) {
+if (redisUrl && !isLocalhostRedisInProd) {
     redis = new Redis(redisUrl, {
         lazyConnect: true,
         maxRetriesPerRequest: 3,
-        enableOfflineQueue: false,
         retryStrategy(times) {
-            if (times > 10) {
-                console.error('[Redis] Max reconnection attempts reached. Stopping retries.');
+            if (times > 3) {
+                console.warn('[Redis] Max reconnection attempts reached. Stopping retries.');
                 return null;
             }
-            const delay = Math.min(times * 500, 5000);
-            return delay;
+            return Math.min(times * 300, 2000);
         },
     });
 

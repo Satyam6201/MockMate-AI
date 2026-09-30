@@ -34,28 +34,41 @@ export const initSocket = (httpServer) => {
     });
 
     // Redis Adapter for horizontal scaling (Cluster mode support)
-    if (process.env.REDIS_URL) {
+    const redisUrl = process.env.REDIS_URL;
+    const isLocalhostRedisInProd = process.env.NODE_ENV === "production" && redisUrl && redisUrl.includes("localhost");
+
+    if (redisUrl && !isLocalhostRedisInProd) {
         try {
-            const pubClient = new Redis(process.env.REDIS_URL, {
+            const pubClient = new Redis(redisUrl, {
                 maxRetriesPerRequest: 3,
-                enableOfflineQueue: false
+                retryStrategy(times) {
+                    if (times > 3) return null; // Stop retrying after 3 attempts
+                    return Math.min(times * 300, 2000);
+                }
             });
             const subClient = pubClient.duplicate();
 
             pubClient.on("error", (err) => {
-                console.error("[Socket Redis Pub Error]:", err.message);
+                console.warn("[Socket Redis Pub Warning]:", err.message);
             });
             subClient.on("error", (err) => {
-                console.error("[Socket Redis Sub Error]:", err.message);
+                console.warn("[Socket Redis Sub Warning]:", err.message);
             });
 
-            io.adapter(createAdapter(pubClient, subClient));
-            console.log("✅ Socket.IO Redis adapter enabled");
+            Promise.all([
+                new Promise((resolve) => pubClient.once('ready', resolve)),
+                new Promise((resolve) => subClient.once('ready', resolve))
+            ]).then(() => {
+                io.adapter(createAdapter(pubClient, subClient));
+                console.log("✅ Socket.IO Redis adapter connected & enabled");
+            }).catch((err) => {
+                console.warn("⚠️ Redis unreachable for Socket.IO, continuing with in-memory adapter:", err.message);
+            });
         } catch (err) {
-            console.error("⚠️ Failed to initialize Socket Redis adapter:", err.message);
+            console.warn("⚠️ Failed to initialize Socket Redis adapter, using in-memory adapter:", err.message);
         }
     } else {
-        console.log("ℹ️ Running Socket.IO with in-memory adapter");
+        console.log("ℹ️ Running Socket.IO with standard in-memory adapter");
     }
 
     // Middleware for authentication
