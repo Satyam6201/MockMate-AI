@@ -5,6 +5,6 @@ import { createCheckoutSession, verifySession } from '../controllers/payment.con
 const paymentRouter = express.Router();
 
 paymentRouter.post("/create-checkout-session", isAuth, createCheckoutSession);
-paymentRouter.post("/verify-session", isAuth, verifySession);
+paymentRouter.post("/verify-session", verifySession);
 
 export default paymentRouter;

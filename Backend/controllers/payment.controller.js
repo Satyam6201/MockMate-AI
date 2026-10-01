@@ -2,6 +2,7 @@ import Payment from "../model/payment.model.js";
 import User from "../model/user.model.js";
 import stripe from "../services/stripe.service.js";
 import { getIO } from "../config/socket.js";
+import genToken from "../config/token.js";
 
 export const createCheckoutSession = async (req, res) => {
     try {
@@ -77,25 +78,41 @@ export const createCheckoutSession = async (req, res) => {
 export const verifySession = async (req, res) => {
     try {
         const { sessionId } = req.body;
+        if (!sessionId) {
+            return res.status(400).json({ message: "Session ID is required" });
+        }
         
         if (process.env.STRIPE_MOCK === 'true' && sessionId.startsWith('mock_session_')) {
             const payment = await Payment.findOne({ stripeSessionId: sessionId });
             
-            if (payment && payment.status !== 'paid') {
-                payment.status = "paid";
-                payment.stripePaymentIntentId = "mock_intent_" + Date.now();
-                await payment.save();
+            if (payment) {
+                let user;
+                if (payment.status !== 'paid') {
+                    payment.status = "paid";
+                    payment.stripePaymentIntentId = "mock_intent_" + Date.now();
+                    await payment.save();
 
-                const updatedUser = await User.findByIdAndUpdate(payment.userId, {
-                    $inc: { credits: payment.credits }
-                }, { new: true });
+                    user = await User.findByIdAndUpdate(payment.userId, {
+                        $inc: { credits: payment.credits }
+                    }, { new: true });
+                } else {
+                    user = await User.findById(payment.userId);
+                }
+
+                if (user) {
+                    const isProduction = process.env.NODE_ENV === "production";
+                    const token = genToken(user._id);
+                    res.cookie("token", token, {
+                        httpOnly: true,
+                        secure: isProduction,
+                        sameSite: isProduction ? "none" : "lax",
+                        maxAge: 7 * 24 * 60 * 60 * 1000,
+                    });
+                }
                 
-                return res.json({ success: true, message: "Payment verified", user: updatedUser });
-            } else if (payment && payment.status === 'paid') {
-                const user = await User.findById(payment.userId);
-                return res.json({ success: true, message: "Payment already processed", user });
+                return res.json({ success: true, message: "Payment verified", user });
             }
-            return res.status(400).json({ message: "Payment not completed" });
+            return res.status(400).json({ message: "Payment not found" });
         }
         
         const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -103,25 +120,38 @@ export const verifySession = async (req, res) => {
         if (session.payment_status === 'paid') {
             const payment = await Payment.findOne({ stripeSessionId: sessionId });
             
-            if (payment && payment.status !== 'paid') {
-                payment.status = "paid";
-                payment.stripePaymentIntentId = session.payment_intent;
-                await payment.save();
+            if (payment) {
+                let user;
+                if (payment.status !== 'paid') {
+                    payment.status = "paid";
+                    payment.stripePaymentIntentId = session.payment_intent;
+                    await payment.save();
 
-                const updatedUser = await User.findByIdAndUpdate(payment.userId, {
-                    $inc: { credits: payment.credits }
-                }, { new: true });
+                    user = await User.findByIdAndUpdate(payment.userId, {
+                        $inc: { credits: payment.credits }
+                    }, { new: true });
+                } else {
+                    user = await User.findById(payment.userId);
+                }
+
+                if (user) {
+                    const isProduction = process.env.NODE_ENV === "production";
+                    const token = genToken(user._id);
+                    res.cookie("token", token, {
+                        httpOnly: true,
+                        secure: isProduction,
+                        sameSite: isProduction ? "none" : "lax",
+                        maxAge: 7 * 24 * 60 * 60 * 1000,
+                    });
+                }
                 
-                return res.json({ success: true, message: "Payment verified", user: updatedUser });
-            } else if (payment && payment.status === 'paid') {
-                const user = await User.findById(payment.userId);
-                return res.json({ success: true, message: "Payment already processed", user });
+                return res.json({ success: true, message: "Payment verified", user });
             }
         }
         
         return res.status(400).json({ message: "Payment not completed" });
     } catch (error) {
-        return res.status(500).json({ message: "Error verifying session" });
+        return res.status(500).json({ message: `Error verifying session: ${error.message}` });
     }
 };
 
