@@ -63,6 +63,7 @@ const Navbar = () => {
     const navLinks = [
         { name: "Home", path: "/" },
         { name: "Preparation", path: "/prepare" },
+        { name: "Resume Builder", path: "/resume-builder", badge: "AI" },
         { name: "Pricing", path: "/payment" },
         { name: "Docs", path: "/docs" }
     ];
@@ -112,9 +113,14 @@ const Navbar = () => {
                     <div key={link.name} className="relative group">
                         <button 
                             onClick={() => navigate(link.path)}
-                            className={`text-sm font-bold transition-all duration-300 ${isActive ? 'text-green-600' : 'text-gray-600 hover:text-gray-900'}`}
+                            className={`text-sm font-bold flex items-center gap-1.5 transition-all duration-300 ${isActive ? 'text-green-600' : 'text-gray-600 hover:text-gray-900'}`}
                         >
-                            {link.name}
+                            <span>{link.name}</span>
+                            {link.badge && (
+                                <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xs">
+                                    {link.badge}
+                                </span>
+                            )}
                         </button>
                         {isActive && (
                             <motion.div 
@@ -281,13 +287,18 @@ const Navbar = () => {
                                     navigate(link.path);
                                     setShowMobileMenu(false);
                                 }}
-                                className={`text-left px-6 py-4 rounded-2xl font-bold transition-all ${
+                                className={`text-left px-6 py-4 rounded-2xl font-bold flex items-center justify-between transition-all ${
                                     location.pathname === link.path 
                                     ? 'bg-green-50 text-green-700 border border-green-100' 
                                     : 'text-gray-600 hover:bg-gray-50'
                                 }`}
                             >
-                                {link.name}
+                                <span>{link.name}</span>
+                                {link.badge && (
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                                        {link.badge}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

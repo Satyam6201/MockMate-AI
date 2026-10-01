@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { FaHome, FaSearch, FaArrowLeft, FaCompass, FaBookOpen, FaCrown } from 'react-icons/fa';
+import { FaHome, FaSearch, FaArrowLeft, FaCompass, FaBookOpen, FaCrown, FaFileAlt } from 'react-icons/fa';
 import { BsRobot, BsShieldExclamation } from 'react-icons/bs';
 import { IoSparklesOutline } from 'react-icons/io5';
 
@@ -22,16 +22,17 @@ const NotFound = () => {
       badge: "Popular"
     },
     {
+      title: "ATS Resume Builder",
+      desc: "Architect recruiter-approved ATS resumes",
+      icon: <FaFileAlt className="text-emerald-400 text-xl" />,
+      path: "/resume-builder",
+      badge: "New AI"
+    },
+    {
       title: "Preparation Hub",
       desc: "Curated questions across 15+ tech stacks",
       icon: <FaCompass className="text-blue-500 text-xl" />,
       path: "/prepare"
-    },
-    {
-      title: "Documentation & FAQs",
-      desc: "Guides on how scoring & AI works",
-      icon: <FaBookOpen className="text-purple-500 text-xl" />,
-      path: "/docs"
     },
     {
       title: "Pricing & Plans",

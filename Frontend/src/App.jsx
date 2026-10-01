@@ -21,6 +21,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Help = lazy(() => import("./pages/HelpCenter"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const Preparation = lazy(() => import("./pages/Preparation"));
+const ResumeBuilder = lazy(() => import("./pages/ResumeBuilder"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 export const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PROD ? "https://mockmate-ai-se1m.onrender.com" : "http://localhost:8080");
@@ -69,6 +70,8 @@ const App = () => {
           <Route path="/help" element={<Help />} /> 
           <Route path="/contact" element={<Contact />} /> 
           <Route path="/prepare" element={<Preparation />} /> 
+          <Route path="/resume-builder" element={<ResumeBuilder />} />
+          <Route path="/resume" element={<ResumeBuilder />} />
           
           {/* Catch-all route for unmapped paths (404 Error Handling) */}
           <Route path="*" element={<NotFound />} />
