@@ -9,76 +9,99 @@ import { getBaselineDifficulty, getDifficultyLabel, extractTopics, calculateNext
 import { generateAdaptiveQuestion } from '../services/questionGenerator.service.js';
 
 export const analyzeResume = async (req, res) => {
+    let filePath = null;
     try {
-        const io = getIO();
-        const userRoom = `user:${req.userId}`;
+        let io = null;
+        try { io = getIO(); } catch {}
+        const userRoom = req.userId ? `user:${req.userId}` : null;
 
         if (!req.file) {
             return res.status(400).json({ message: "Resume required" });
         }
         
-        io.to(userRoom).emit("resume:stage", { stage: "UPLOAD_RECEIVED", progress: 10, message: "Resume uploaded ✓" });
+        filePath = req.file.path;
+        if (io && userRoom) {
+            io.to(userRoom).emit("resume:stage", { stage: "UPLOAD_RECEIVED", progress: 10, message: "Resume uploaded ✓" });
+        }
 
-        const filePath = req.file.path;
         const fileBuffer = await fs.promises.readFile(filePath);
         const uint8Array = new Uint8Array(fileBuffer);
         
-        io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_STARTED", progress: 30, message: "Extracting text..." });
+        if (io && userRoom) {
+            io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_STARTED", progress: 30, message: "Extracting text..." });
+        }
 
-        const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
         let resumeText = "";
-
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const content = await page.getTextContent();
-            const pageText = content.items.map(item => item.str).join(" ");
-            resumeText += pageText + "\n";
-        }
-
-        resumeText = resumeText.replace(/\s+/g, " ").trim();
-        
-        io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_COMPLETED", progress: 50, message: "Text extracted ✓" });
-        io.to(userRoom).emit("resume:stage", { stage: "RESUME_ANALYSIS_STARTED", progress: 60, message: "Analyzing resume..." });
-
-        const messages = [
-            {
-                role: "system",
-                content: `Extract structured data from resume. 
-                Return strictly JSON:
-                {
-                  "role" : "string",
-                  "experience": "string",
-                  "projects": ["project1", "project2"],
-                  "skills": ["skill1", "skill2"]
-                }`
-            },
-            {
-                role: "user",
-                content: resumeText
-            }
-        ];
-
-        io.to(userRoom).emit("resume:stage", { stage: "AI_CONTEXT_PREPARATION", progress: 75, message: "Preparing AI context..." });
-        const aiResponse = await askAi(messages);
-
-        const cleanAiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
-        let parsed;
         try {
-            parsed = JSON.parse(cleanAiResponse);
-        } catch {
-            parsed = { role: "Software Engineer", experience: "Not specified", projects: [], skills: [] };
+            const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const content = await page.getTextContent();
+                const pageText = content.items.map(item => item.str).join(" ");
+                resumeText += pageText + "\n";
+            }
+            resumeText = resumeText.replace(/\s+/g, " ").trim();
+        } catch (pdfErr) {
+            console.warn("[analyzeResume] PDFJS extraction warning:", pdfErr.message);
         }
 
-        try { fs.unlinkSync(filePath); } catch {}
+        if (io && userRoom) {
+            io.to(userRoom).emit("resume:stage", { stage: "TEXT_EXTRACTION_COMPLETED", progress: 50, message: "Text extracted ✓" });
+            io.to(userRoom).emit("resume:stage", { stage: "RESUME_ANALYSIS_STARTED", progress: 60, message: "Analyzing resume..." });
+        }
 
-        io.to(userRoom).emit("resume:stage", { stage: "PROCESSING_COMPLETED", progress: 100, message: "Finalizing..." });
-        setTimeout(() => {
-             io.to(userRoom).emit("resume:completed", { message: "Ready" });
-        }, 500);
+        let parsed = { role: "Software Engineer", experience: "1-2 Years", projects: [], skills: [] };
+
+        if (resumeText && resumeText.length > 20) {
+            const messages = [
+                {
+                    role: "system",
+                    content: `Extract structured data from resume. 
+                    Return strictly JSON:
+                    {
+                      "role" : "string",
+                      "experience": "string",
+                      "projects": ["project1", "project2"],
+                      "skills": ["skill1", "skill2"]
+                    }`
+                },
+                {
+                    role: "user",
+                    content: resumeText.slice(0, 4000)
+                }
+            ];
+
+            if (io && userRoom) {
+                io.to(userRoom).emit("resume:stage", { stage: "AI_CONTEXT_PREPARATION", progress: 75, message: "Preparing AI context..." });
+            }
+
+            try {
+                const aiResponse = await askAi(messages);
+                const cleanAiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
+                parsed = JSON.parse(cleanAiResponse);
+            } catch (aiErr) {
+                console.warn("[analyzeResume] AI extraction fallback:", aiErr.message);
+                const textLower = resumeText.toLowerCase();
+                if (textLower.includes("frontend") || textLower.includes("react")) {
+                    parsed.role = "Frontend Developer";
+                } else if (textLower.includes("backend") || textLower.includes("node")) {
+                    parsed.role = "Backend Developer";
+                } else if (textLower.includes("full stack") || textLower.includes("fullstack")) {
+                    parsed.role = "Full Stack Developer";
+                }
+            }
+        }
+
+        if (io && userRoom) {
+            io.to(userRoom).emit("resume:stage", { stage: "PROCESSING_COMPLETED", progress: 100, message: "Finalizing..." });
+            setTimeout(() => {
+                try { io.to(userRoom).emit("resume:completed", { message: "Ready" }); } catch {}
+            }, 300);
+        }
 
         return res.json({
             role: parsed.role || "Software Engineer",
-            experience: parsed.experience || "Not specified",
+            experience: parsed.experience || "1-2 Years",
             projects: Array.isArray(parsed.projects) ? parsed.projects : [],
             skills: Array.isArray(parsed.skills) ? parsed.skills : [],
             resumeText
@@ -89,16 +112,18 @@ export const analyzeResume = async (req, res) => {
             return res.status(400).json({ message: "Only PDF files are allowed for resume upload." });
         }
 
-        if (req.file && fs.existsSync(req.file.path)) {
-            try { fs.unlinkSync(req.file.path); } catch {}
-        }
-
         try {
             const io = getIO();
-            io.to(`user:${req.userId}`).emit("resume:error", { message: "Resume processing failed. Please try again." });
+            if (req.userId) {
+                io.to(`user:${req.userId}`).emit("resume:error", { message: "Resume processing encountered an issue. Please enter details manually." });
+            }
         } catch {}
 
         return res.status(500).json({ message: error.message || "Failed to process resume" });
+    } finally {
+        if (filePath && fs.existsSync(filePath)) {
+            try { fs.unlinkSync(filePath); } catch {}
+        }
     }
 };
 

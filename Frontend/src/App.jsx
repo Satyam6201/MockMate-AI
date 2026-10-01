@@ -6,8 +6,8 @@ import { setUserData } from "./redux/userSlice";
 import { Toaster } from "react-hot-toast";
 import { useSocket } from "./hooks/useSocket.js";
 import Chatbot from "./components/Chatbot";
+import ScrollToTop from "./components/ScrollToTop";
 
-// Lazy Loaded Pages (Code Splitting for performance)
 const Home = lazy(() => import("./pages/Home"));
 const Auth = lazy(() => import("./pages/Auth"));
 const InterviewPage = lazy(() => import("./pages/InterviewPage"));
@@ -28,27 +28,27 @@ export const serverUrl = import.meta.env.VITE_SERVER_URL || (import.meta.env.PRO
 
 const App = () => {
   const dispatch = useDispatch();
-  useSocket(); // Initialize global socket connection
+  useSocket();
 
   useEffect(() => {
     const getUser = async () => {
       try {
         const result = await axios.get(serverUrl + "/api/user/current-user", {
           withCredentials: true
-        })
+        });
         dispatch(setUserData(result.data));
-
       } catch (error) {
         console.log(error);
         dispatch(setUserData(null));
       }
-    }
+    };
 
     getUser();
   }, [dispatch]);
 
   return (
     <>
+      <ScrollToTop />
       <Toaster position="top-center" reverseOrder={false} toastOptions={{ duration: 4000, style: { borderRadius: '10px', background: '#333', color: '#fff' } }} />
       <Chatbot />
       <Suspense fallback={
@@ -60,7 +60,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/interview" element={<InterviewPage />} />
-          <Route path="/history" element ={<InterviewHistory />} />
+          <Route path="/history" element={<InterviewHistory />} />
           <Route path="/payment" element={<Pricing />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/report/:id" element={<InterviewReport />} />
@@ -72,13 +72,11 @@ const App = () => {
           <Route path="/prepare" element={<Preparation />} /> 
           <Route path="/resume-builder" element={<ResumeBuilder />} />
           <Route path="/resume" element={<ResumeBuilder />} />
-          
-          {/* Catch-all route for unmapped paths (404 Error Handling) */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

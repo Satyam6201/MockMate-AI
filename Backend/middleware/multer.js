@@ -1,9 +1,18 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
+
+const uploadDir = path.resolve('public');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        callback(null, "public");
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        callback(null, uploadDir);
     },
     filename: function (req, file, callback) {
         const safeName = file.originalname.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
