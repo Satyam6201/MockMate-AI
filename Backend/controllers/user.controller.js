@@ -1,9 +1,26 @@
 import User from "../model/user.model.js";
 import redis from "../config/redis.js";
+import jwt from "jsonwebtoken";
 
 export const getCurrentUser = async (req, res) => {
     try {
-        const userId = req.userId;
+        const { token } = req.cookies || {};
+        if (!token) {
+            return res.status(200).json(null);
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        } catch {
+            return res.status(200).json(null);
+        }
+
+        if (!decoded?.userId) {
+            return res.status(200).json(null);
+        }
+
+        const userId = decoded.userId;
         const cacheKey = `user:${userId}`;
 
         if (redis) {
@@ -20,7 +37,7 @@ export const getCurrentUser = async (req, res) => {
         const user = await User.findById(userId);
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(200).json(null);
         }
 
         if (redis) {
@@ -33,6 +50,6 @@ export const getCurrentUser = async (req, res) => {
 
         return res.status(200).json(user);
     } catch (error) {
-        return res.status(500).json({ message: `Failed to get User: ${error.message || error}` });
+        return res.status(200).json(null);
     }
 };

@@ -11,6 +11,14 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(400).json({ message: "Invalid plan data" });
         }
 
+        const clientOrigin = req.headers.origin 
+            || (req.headers.referer ? new URL(req.headers.referer).origin : null)
+            || process.env.FRONTEND_URL 
+            || process.env.SITE_URL 
+            || 'http://localhost:5173';
+
+        const frontendUrl = clientOrigin.replace(/\/$/, '');
+
         if (process.env.STRIPE_MOCK === 'true') {
             const mockSessionId = 'mock_session_' + Date.now();
             await Payment.create({
@@ -21,7 +29,6 @@ export const createCheckoutSession = async (req, res) => {
                 stripeSessionId: mockSessionId,
                 status: "created"
             });
-            const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
             const mockUrl = `${frontendUrl}/payment-success?session_id=${mockSessionId}`;
             return res.json({ id: mockSessionId, url: mockUrl });
         }
@@ -42,8 +49,8 @@ export const createCheckoutSession = async (req, res) => {
                 },
             ],
             mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment`,
+            success_url: `${frontendUrl}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${frontendUrl}/payment`,
             client_reference_id: req.userId.toString(),
             metadata: {
                 planId: planId.toString(),

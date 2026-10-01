@@ -37,8 +37,7 @@ const App = () => {
           withCredentials: true
         });
         dispatch(setUserData(result.data));
-      } catch (error) {
-        console.log(error);
+      } catch {
         dispatch(setUserData(null));
       }
     };
