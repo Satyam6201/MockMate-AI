@@ -12,6 +12,7 @@ const ResumePreview = React.forwardRef(({
     <div className="bg-slate-200/80 p-4 sm:p-6 rounded-2xl border border-slate-300 shadow-inner flex justify-center overflow-x-auto">
       <div
         ref={ref}
+        id="resume-print-area"
         className={`bg-white text-slate-900 shadow-xl border border-slate-200 rounded-xs w-full max-w-[800px] min-h-[1050px] p-8 sm:p-10 ${
           fontFamily === 'serif' ? 'font-serif' : fontFamily === 'mono' ? 'font-mono' : 'font-sans'
         } ${

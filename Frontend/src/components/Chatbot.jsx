@@ -8,7 +8,7 @@ import Markdown from 'react-markdown';
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: "Hi there! 👋 I'm the MockMate AI Support Bot. I can answer any questions you have about using this platform, or explain how our enterprise architecture works. How can I help?" }
+    { sender: 'bot', text: "Hello! I am your MockMate AI Assistant. I can help you with AI Mock Interviews, our ATS Resume Builder & Missing Items Audit, SDE preparation topics, or credit plans. How can I assist you today?" }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);

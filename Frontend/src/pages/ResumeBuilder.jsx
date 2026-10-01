@@ -244,32 +244,59 @@ const ResumeBuilder = () => {
             toast.error(apiErr.response?.data?.message || "Insufficient credits for Pro template.", { id: toastId });
             setShowCreditModal(true);
             setIsExporting(false);
-            return;
           }
         }
       }
 
       const element = resumePrintRef.current;
+      
       const canvas = await html2canvas(element, {
         scale: 2.5,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 1024,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.getElementById('resume-print-area');
+          if (clonedElement) {
+            clonedElement.style.width = '794px';
+            clonedElement.style.maxWidth = '794px';
+            clonedElement.style.margin = '0 auto';
+            clonedElement.style.padding = '32px';
+            clonedElement.style.boxShadow = 'none';
+            clonedElement.style.border = 'none';
+          }
+        }
       });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfWidth = 210;
+      const pdfPageHeight = 297;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      const filename = `${(resumeData.personalInfo.fullName || 'Resume').replace(/\s+/g, '_')}_ATS_Resume.pdf`;
-      pdf.save(filename);
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pdfPageHeight;
+
+      while (heightLeft > 5) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pdfPageHeight;
+      }
+
+      const rawName = resumeData.personalInfo?.fullName?.trim() || 'Candidate';
+      const cleanName = rawName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      pdf.save(`${cleanName}_ATS_Resume.pdf`);
 
       toast.success("Resume downloaded successfully", { id: toastId });
     } catch (error) {
