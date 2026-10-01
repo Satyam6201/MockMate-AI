@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { serverUrl } from '../App';
@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 import { sampleResumes, PRO_TEMPLATES } from '../data/resumeData';
 import { runAtsAudit } from '../utils/atsAudit';
@@ -44,7 +44,6 @@ const ResumeBuilder = () => {
 
   const resumePrintRef = useRef(null);
 
-  // Compute live ATS audit diagnostics
   const auditReport = runAtsAudit(resumeData);
   const atsScoreData = {
     score: auditReport.overallScore,
@@ -222,36 +221,13 @@ const ResumeBuilder = () => {
     }
 
     setIsExporting(true);
-    const toastId = toast.loading(isPro ? "Deducting 50 credits & preparing Pro PDF..." : "Generating ATS-Optimized PDF...");
+    const toastId = toast.loading(isPro ? "Generating ATS Pro PDF (50 Credits)..." : "Generating ATS-Optimized PDF...");
 
     try {
-      if (userData) {
-        try {
-          const res = await axios.post(`${serverUrl}/api/resume/build`, {
-            resumeData,
-            template: selectedTemplate,
-            accentColor,
-            fontFamily,
-            atsScore: atsScoreData.score
-          }, { withCredentials: true });
-
-          if (res.data?.creditsDeducted > 0) {
-            dispatch(setUserData({ ...userData, credits: res.data.creditsLeft }));
-            toast.success(`50 Credits deducted. Remaining: ${res.data.creditsLeft}`);
-          }
-        } catch (apiErr) {
-          if (apiErr?.response?.status === 402 || apiErr?.response?.status === 400) {
-            toast.error(apiErr.response?.data?.message || "Insufficient credits for Pro template.", { id: toastId });
-            setShowCreditModal(true);
-            setIsExporting(false);
-          }
-        }
-      }
-
       const element = resumePrintRef.current;
-      
+
       const canvas = await html2canvas(element, {
-        scale: 2.5,
+        scale: 2.2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -298,10 +274,30 @@ const ResumeBuilder = () => {
       const cleanName = rawName.replace(/[^a-zA-Z0-9_-]/g, '_');
       pdf.save(`${cleanName}_ATS_Resume.pdf`);
 
+      if (userData) {
+        try {
+          const res = await axios.post(`${serverUrl}/api/resume/build`, {
+            resumeData,
+            template: selectedTemplate,
+            accentColor,
+            fontFamily,
+            atsScore: atsScoreData.score
+          }, { withCredentials: true });
+
+          if (res.data?.creditsDeducted > 0) {
+            dispatch(setUserData({ ...userData, credits: res.data.creditsLeft }));
+            toast.success(`PDF downloaded. 50 Credits deducted (Remaining: ${res.data.creditsLeft})`, { id: toastId });
+            return;
+          }
+        } catch (apiErr) {
+          console.warn("Could not sync resume build record:", apiErr?.message);
+        }
+      }
+
       toast.success("Resume downloaded successfully", { id: toastId });
     } catch (error) {
       console.error("PDF generation failed:", error);
-      toast.error("Failed to generate PDF. You can also use the Print button.", { id: toastId });
+      toast.error("Failed to generate PDF. You can also use the Print button to save as PDF.", { id: toastId });
     } finally {
       setIsExporting(false);
     }
@@ -313,8 +309,8 @@ const ResumeBuilder = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 relative">
-      <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 pointer-events-none"></div>
-      <div className="absolute bottom-10 right-20 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 pointer-events-none"></div>
+      <div className="absolute top-10 left-10 w-72 h-72 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 pointer-events-none no-print"></div>
+      <div className="absolute bottom-10 right-20 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 pointer-events-none no-print"></div>
 
       <Navbar />
 
@@ -329,7 +325,7 @@ const ResumeBuilder = () => {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <div className={`${activeView === 'preview' ? 'hidden' : activeView === 'editor' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-6`}>
+        <div className={`resume-editor-col ${activeView === 'preview' ? 'hidden' : activeView === 'editor' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-6`}>
           <ResumeScoreCard 
             atsScoreData={atsScoreData} 
             onOpenAudit={() => setShowAuditModal(true)} 
@@ -369,7 +365,7 @@ const ResumeBuilder = () => {
           />
         </div>
 
-        <div className={`${activeView === 'editor' ? 'hidden' : activeView === 'preview' ? 'lg:col-span-12' : 'lg:col-span-7'} sticky top-24`}>
+        <div className={`resume-preview-container ${activeView === 'editor' ? 'hidden' : activeView === 'preview' ? 'lg:col-span-12' : 'lg:col-span-7'} sticky top-24`}>
           <ResumePreview
             ref={resumePrintRef}
             resumeData={resumeData}

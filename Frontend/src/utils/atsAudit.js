@@ -3,11 +3,9 @@ import { powerActionVerbs } from '../data/resumeData';
 export const runAtsAudit = (resumeData) => {
   const missingItems = [];
   const strengths = [];
-  const suggestions = [];
 
   const { personalInfo = {}, skills = {}, experience = [], projects = [], education = [], certifications = [] } = resumeData;
 
-  // 1. Contact & Header Audit (Max 20 pts)
   let contactScore = 0;
   const contactMax = 20;
 
@@ -70,17 +68,16 @@ export const runAtsAudit = (resumeData) => {
 
   if (personalInfo.linkedin?.trim() || personalInfo.github?.trim()) {
     contactScore += 3;
-    strengths.push("Professional social profiles (LinkedIn/GitHub) provided");
+    strengths.push("Professional profile URLs included");
   } else {
     missingItems.push({
       tab: 'personal',
-      field: 'Social Profiles',
-      severity: 'high',
+      field: 'Social & Code Links',
+      severity: 'medium',
       message: "Missing LinkedIn or GitHub profile link."
     });
   }
 
-  // Summary check
   if (personalInfo.summary && personalInfo.summary.trim().length >= 60) {
     strengths.push("Comprehensive professional summary provided");
   } else if (!personalInfo.summary || personalInfo.summary.trim().length === 0) {
@@ -99,7 +96,6 @@ export const runAtsAudit = (resumeData) => {
     });
   }
 
-  // 2. Technical Skills Audit (Max 20 pts)
   let skillsScore = 0;
   const skillsMax = 20;
   const languagesList = (skills.languages || '').split(',').filter(s => s.trim().length > 0);
@@ -139,7 +135,6 @@ export const runAtsAudit = (resumeData) => {
     });
   }
 
-  // 3. Work Experience & Metric Audit (Max 35 pts)
   let expScore = 0;
   const expMax = 35;
   let actionVerbCount = 0;
@@ -205,7 +200,6 @@ export const runAtsAudit = (resumeData) => {
     }
   }
 
-  // 4. Projects Audit (Max 15 pts)
   let projScore = 0;
   const projMax = 15;
 
@@ -230,7 +224,6 @@ export const runAtsAudit = (resumeData) => {
     });
   }
 
-  // 5. Education & Certifications Audit (Max 10 pts)
   let eduScore = 0;
   const eduMax = 10;
 
@@ -258,7 +251,6 @@ export const runAtsAudit = (resumeData) => {
     });
   }
 
-  // Compute final overall ATS score
   const rawTotal = contactScore + skillsScore + expScore + projScore + eduScore;
   const overallScore = Math.min(100, Math.max(15, rawTotal));
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  FaTimes, FaExclamationTriangle, FaCheckCircle, FaSearch, 
-  FaArrowRight, FaChartPie, FaListCheck, FaShieldAlt
+  FaTimes, FaExclamationTriangle, FaCheckCircle, 
+  FaArrowRight, FaChartPie 
 } from 'react-icons/fa';
 import { BsShieldCheck } from 'react-icons/bs';
 
@@ -36,7 +36,6 @@ const ResumeAuditModal = ({
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className="bg-white border border-slate-200 w-full max-w-2xl rounded-2xl shadow-2xl p-5 sm:p-6 text-slate-800 space-y-4 my-8"
         >
-          {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg shadow-xs">
@@ -67,7 +66,6 @@ const ResumeAuditModal = ({
             </div>
           ) : (
             <>
-              {/* Top Score Banner */}
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col items-center justify-center">
@@ -106,7 +104,6 @@ const ResumeAuditModal = ({
                 </div>
               </div>
 
-              {/* View Switcher Tabs */}
               <div className="flex items-center gap-1.5 border-b border-slate-100 pb-2">
                 <button
                   onClick={() => setActiveSubTab('missing')}
@@ -142,9 +139,7 @@ const ResumeAuditModal = ({
                 </button>
               </div>
 
-              {/* Tab Contents */}
               <div className="max-h-[340px] overflow-y-auto space-y-2.5 pr-1">
-                {/* 1. Missing Items Tab */}
                 {activeSubTab === 'missing' && (
                   <>
                     {auditReport.missingItems.length === 0 ? (
@@ -190,7 +185,6 @@ const ResumeAuditModal = ({
                   </>
                 )}
 
-                {/* 2. Section Breakdown Tab */}
                 {activeSubTab === 'sections' && (
                   <div className="space-y-3">
                     {auditReport.sections.map((sec, idx) => (
@@ -212,7 +206,6 @@ const ResumeAuditModal = ({
                   </div>
                 )}
 
-                {/* 3. Strengths Tab */}
                 {activeSubTab === 'strengths' && (
                   <div className="space-y-2">
                     {auditReport.strengths.map((str, idx) => (
@@ -228,7 +221,6 @@ const ResumeAuditModal = ({
                 )}
               </div>
 
-              {/* Action Button */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-end">
                 <button
                   onClick={onClose}

@@ -9,11 +9,11 @@ const ResumePreview = React.forwardRef(({
   fontSize
 }, ref) => {
   return (
-    <div className="bg-slate-200/80 p-4 sm:p-6 rounded-2xl border border-slate-300 shadow-inner flex justify-center overflow-x-auto">
+    <div className="resume-preview-wrapper bg-slate-200/80 p-4 sm:p-6 rounded-2xl border border-slate-300 shadow-inner flex justify-center overflow-x-auto">
       <div
         ref={ref}
         id="resume-print-area"
-        className={`bg-white text-slate-900 shadow-xl border border-slate-200 rounded-xs w-full max-w-[800px] min-h-[1050px] p-8 sm:p-10 ${
+        className={`resume-print-target bg-white text-slate-900 shadow-xl border border-slate-200 rounded-xs w-full max-w-[800px] min-h-[1050px] p-8 sm:p-10 ${
           fontFamily === 'serif' ? 'font-serif' : fontFamily === 'mono' ? 'font-mono' : 'font-sans'
         } ${
           fontSize === 'compact' ? 'text-[11px] leading-snug space-y-3' : fontSize === 'spacious' ? 'text-[13px] leading-relaxed space-y-5' : 'text-xs leading-normal space-y-4'
