@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaFileAlt, FaPrint, FaDownload } from 'react-icons/fa';
+import { FaFileAlt, FaPrint, FaDownload, FaSearch } from 'react-icons/fa';
 
 const ResumeHeader = ({
   onLoadSample,
@@ -7,6 +7,7 @@ const ResumeHeader = ({
   setActiveView,
   onPrint,
   onDownloadPdf,
+  onOpenAudit,
   isExporting
 }) => {
   return (
@@ -67,6 +68,13 @@ const ResumeHeader = ({
               Preview Only
             </button>
           </div>
+
+          <button
+            onClick={onOpenAudit}
+            className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold transition shadow-xs"
+          >
+            <FaSearch className="text-emerald-700" /> ATS Audit
+          </button>
 
           <button
             onClick={onPrint}

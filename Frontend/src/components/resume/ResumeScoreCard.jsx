@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { BsShieldCheck } from 'react-icons/bs';
-import { FaLightbulb, FaCheckCircle } from 'react-icons/fa';
+import { FaLightbulb, FaCheckCircle, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
 
-const ResumeScoreCard = ({ atsScoreData }) => {
+const ResumeScoreCard = ({ atsScoreData, onOpenAudit }) => {
   return (
-    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-      <div className="flex items-center justify-between gap-3 mb-3">
+    <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden space-y-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <BsShieldCheck className="text-emerald-600 text-lg" />
           <h3 className="font-bold text-sm text-slate-900">ATS Compatibility Score</h3>
@@ -15,11 +15,13 @@ const ResumeScoreCard = ({ atsScoreData }) => {
           <span className={`text-base font-extrabold ${atsScoreData.score >= 85 ? 'text-emerald-700' : atsScoreData.score >= 70 ? 'text-amber-700' : 'text-rose-700'}`}>
             {atsScoreData.score}%
           </span>
-          <span className="text-[10px] text-emerald-800 font-semibold">Ready</span>
+          <span className="text-[10px] text-emerald-800 font-semibold">
+            {atsScoreData.score >= 85 ? 'Optimized' : atsScoreData.score >= 70 ? 'Good' : 'Needs Fix'}
+          </span>
         </div>
       </div>
 
-      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden mb-3">
+      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
         <motion.div 
           initial={{ width: 0 }}
           animate={{ width: `${atsScoreData.score}%` }}
@@ -43,6 +45,15 @@ const ResumeScoreCard = ({ atsScoreData }) => {
           <span>Excellent! Your resume fulfills high ATS compliance criteria.</span>
         </div>
       )}
+
+      {/* Button to run in-depth ATS Audit and detect missing items */}
+      <button
+        onClick={onOpenAudit}
+        className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 text-emerald-900 font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-2xs"
+      >
+        <FaSearch className="text-emerald-700 text-xs" />
+        Run ATS Audit & Detect Missing Items
+      </button>
     </div>
   );
 };

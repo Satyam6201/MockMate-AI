@@ -9,7 +9,8 @@ import toast from 'react-hot-toast';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
-import { sampleResumes, powerActionVerbs, PRO_TEMPLATES } from '../data/resumeData';
+import { sampleResumes, PRO_TEMPLATES } from '../data/resumeData';
+import { runAtsAudit } from '../utils/atsAudit';
 import ResumeHeader from '../components/resume/ResumeHeader';
 import ResumeScoreCard from '../components/resume/ResumeScoreCard';
 import ResumeStyleControls from '../components/resume/ResumeStyleControls';
@@ -17,6 +18,7 @@ import ResumeFormEditor from '../components/resume/ResumeFormEditor';
 import ResumePreview from '../components/resume/ResumePreview';
 import ResumeAiModal from '../components/resume/ResumeAiModal';
 import ResumeCreditModal from '../components/resume/ResumeCreditModal';
+import ResumeAuditModal from '../components/resume/ResumeAuditModal';
 
 const ResumeBuilder = () => {
   const dispatch = useDispatch();
@@ -30,11 +32,11 @@ const ResumeBuilder = () => {
   const [fontFamily, setFontFamily] = useState('sans');
   const [fontSize, setFontSize] = useState('normal');
   const [isExporting, setIsExporting] = useState(false);
-  const [atsScoreData, setAtsScoreData] = useState({ score: 95, feedback: [] });
   const [activeView, setActiveView] = useState('split');
 
   const [showAiModal, setShowAiModal] = useState(false);
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
   const [targetBulletPath, setTargetBulletPath] = useState(null);
   const [rawBulletInput, setRawBulletInput] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState([]);
@@ -42,77 +44,12 @@ const ResumeBuilder = () => {
 
   const resumePrintRef = useRef(null);
 
-  useEffect(() => {
-    let score = 0;
-    const feedback = [];
-
-    const { fullName, email, phone, location, linkedin, github, summary } = resumeData.personalInfo;
-    let contactPts = 0;
-    if (fullName?.trim()) contactPts += 5;
-    if (email?.includes('@')) contactPts += 5;
-    if (phone?.trim()) contactPts += 5;
-    if (location?.trim()) contactPts += 3;
-    if (linkedin?.trim() || github?.trim()) contactPts += 4;
-    if (summary && summary.length > 50) contactPts += 3;
-    score += contactPts;
-    if (contactPts < 22) {
-      feedback.push("Add complete contact details (phone, email, LinkedIn, and summary) to maximize recruiter visibility.");
-    }
-
-    const totalSkills = (resumeData.skills.languages + resumeData.skills.frameworks + resumeData.skills.databases + resumeData.skills.tools)
-      .split(',')
-      .filter(s => s.trim().length > 0).length;
-
-    if (totalSkills >= 12) {
-      score += 20;
-    } else if (totalSkills >= 6) {
-      score += 14;
-      feedback.push("Add 6+ more technical skills aligned with your target role.");
-    } else {
-      score += 8;
-      feedback.push("Your skills section needs more keywords. Include core languages, frameworks, and developer tools.");
-    }
-
-    let actionVerbCount = 0;
-    let metricCount = 0;
-    let totalBullets = 0;
-
-    resumeData.experience.forEach(exp => {
-      exp.bullets.forEach(bullet => {
-        totalBullets++;
-        const lower = bullet.toLowerCase();
-        if (powerActionVerbs.some(verb => lower.includes(verb))) actionVerbCount++;
-        if (/\d+%|\$\d+|\d+\+|\d+ms|\d+m/i.test(bullet)) metricCount++;
-      });
-    });
-
-    if (totalBullets > 0) {
-      const verbRatio = actionVerbCount / totalBullets;
-      const metricRatio = metricCount / totalBullets;
-
-      const verbPts = Math.min(20, Math.round(verbRatio * 20));
-      const metricPts = Math.min(15, Math.round(metricRatio * 15));
-      score += (verbPts + metricPts);
-
-      if (metricRatio < 0.4) {
-        feedback.push("Quantify achievements with measurable metrics (e.g. 'reduced latency by 40%', 'served 10k+ users').");
-      }
-      if (verbRatio < 0.6) {
-        feedback.push("Start bullet points with strong action verbs (e.g., 'Architected', 'Engineered', 'Optimized').");
-      }
-    } else {
-      score += 10;
-      feedback.push("Add work experience or internship achievements to strengthen your profile.");
-    }
-
-    if (resumeData.projects.length >= 2) score += 10;
-    else if (resumeData.projects.length === 1) score += 6;
-
-    if (resumeData.education.length >= 1) score += 10;
-
-    const finalScore = Math.min(100, Math.max(20, score));
-    setAtsScoreData({ score: finalScore, feedback });
-  }, [resumeData]);
+  // Compute live ATS audit diagnostics
+  const auditReport = runAtsAudit(resumeData);
+  const atsScoreData = {
+    score: auditReport.overallScore,
+    feedback: auditReport.missingItems.slice(0, 2).map(item => item.message)
+  };
 
   const handleLoadSample = (type) => {
     setResumeData(sampleResumes[type]);
@@ -360,12 +297,16 @@ const ResumeBuilder = () => {
         setActiveView={setActiveView}
         onPrint={handlePrint}
         onDownloadPdf={handleDownloadPdf}
+        onOpenAudit={() => setShowAuditModal(true)}
         isExporting={isExporting}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className={`${activeView === 'preview' ? 'hidden' : activeView === 'editor' ? 'lg:col-span-12' : 'lg:col-span-5'} space-y-6`}>
-          <ResumeScoreCard atsScoreData={atsScoreData} />
+          <ResumeScoreCard 
+            atsScoreData={atsScoreData} 
+            onOpenAudit={() => setShowAuditModal(true)} 
+          />
 
           <ResumeStyleControls
             selectedTemplate={selectedTemplate}
@@ -433,6 +374,13 @@ const ResumeBuilder = () => {
           setShowCreditModal(false);
           toast.success(`Switched to Free ${tpl === 'executive' ? 'Harvard Classic' : 'Minimalist'} Template (0 Credits)`);
         }}
+      />
+
+      <ResumeAuditModal
+        isOpen={showAuditModal}
+        onClose={() => setShowAuditModal(false)}
+        auditReport={auditReport}
+        onJumpToTab={(tab) => setActiveTab(tab)}
       />
 
       <Footer />
