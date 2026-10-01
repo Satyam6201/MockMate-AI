@@ -17,7 +17,7 @@ const LINKS = {
     { name: "Home", to: "/" },
     { name: "ATS Resume Builder", to: "/resume" },
     { name: "SDE Preparation", to: "/prepare" },
-    { name: "Pricing & Credits", to: "/pricing" },
+    { name: "Pricing & Credits", to: "/payment" },
     { name: "Interview History", to: "/history" },
   ],
   Resources: [

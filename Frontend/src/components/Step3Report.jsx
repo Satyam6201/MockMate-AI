@@ -28,47 +28,43 @@ const Step3Report = ({report}) => {
     )
   }
 
-  const {
-    finalScore = 0,
-    confidence = 0,
-    communication = 0,
-    correctness = 0,
-    questionWiseScore = []
-  } = report;
+  const numFinalScore = Number(Number(report?.finalScore || 0).toFixed(1));
+  const numConfidence = Number(Number(report?.confidence || 0).toFixed(1));
+  const numCommunication = Number(Number(report?.communication || 0).toFixed(1));
+  const numCorrectness = Number(Number(report?.correctness || 0).toFixed(1));
+  const questionWiseScore = report?.questionWiseScore || [];
 
   const questionScoreData = questionWiseScore.map((score, index) => ({
     name: `Q${index+1}`,
-    score: score.score || 0,
+    score: Number(Number(score.score || 0).toFixed(1)),
   }));
 
   const skills = [
-    { label: "Confidence", value: confidence, color: "bg-blue-500" },
-    { label: "Communication", value: communication, color: "bg-purple-500" },
-    { label: "Correctness", value: correctness, color: "bg-emerald-500" }
+    { label: "Confidence", value: numConfidence, color: "bg-blue-500" },
+    { label: "Communication", value: numCommunication, color: "bg-purple-500" },
+    { label: "Correctness", value: numCorrectness, color: "bg-emerald-500" }
   ];
 
   let performanceText = "";
   let shortTagline = "";
   let badgeColor = "";
 
-  if (finalScore >= 8) {
-    performanceText = "Outstanding! Ready for opportunities."
-    shortTagline = "Excellent clarity and structured response."
-    badgeColor = "text-green-600 bg-green-100 border-green-200"
-  }
-  else if (finalScore >= 5) {
-    performanceText = "Good Effort. Needs minor refinement."
-    shortTagline = "Solid foundation, practice your delivery."
-    badgeColor = "text-yellow-600 bg-yellow-100 border-yellow-200"
-  }
-  else {
-    performanceText = "Needs Practice. Keep going!"
-    shortTagline = "Work on clarity, structure, and confidence."
-    badgeColor = "text-red-600 bg-red-100 border-red-200"
+  if (numFinalScore >= 8) {
+    performanceText = "Outstanding! Ready for opportunities.";
+    shortTagline = "Excellent clarity and structured response.";
+    badgeColor = "text-green-600 bg-green-100 border-green-200";
+  } else if (numFinalScore >= 5) {
+    performanceText = "Good Effort. Needs minor refinement.";
+    shortTagline = "Solid foundation, practice your delivery.";
+    badgeColor = "text-yellow-600 bg-yellow-100 border-yellow-200";
+  } else {
+    performanceText = "Needs Practice. Keep going!";
+    shortTagline = "Work on clarity, structure, and confidence.";
+    badgeColor = "text-red-600 bg-red-100 border-red-200";
   }
 
-  const score = finalScore;
-  const percentage = (score / 10) * 100; 
+  const score = numFinalScore;
+  const percentage = Math.min(100, Math.max(0, (score / 10) * 100)); 
 
   const downloadPDF = () => {
     const doc = new jsPDF("P", "mm", "a4");
@@ -99,7 +95,7 @@ const Step3Report = ({report}) => {
 
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Final Score: ${finalScore} / 10 - ${performanceText}`, pageWidth / 2, currentY + 12, { align: "center" });
+    doc.text(`Final Score: ${numFinalScore} / 10 - ${performanceText}`, pageWidth / 2, currentY + 12, { align: "center" });
 
     currentY += 30;
 
@@ -107,19 +103,19 @@ const Step3Report = ({report}) => {
     doc.setFillColor(249, 250, 251);
     doc.roundedRect(margin, currentY, contentWidth, 30, 4, 4, "F");
     doc.setFontSize(12);
-    doc.text(`Confidence: ${confidence}`, margin + 10, currentY + 10);
-    doc.text(`Communication: ${communication}`, margin + 10, currentY + 18);
-    doc.text(`Correctness: ${correctness}`, margin + 10, currentY + 26);
+    doc.text(`Confidence: ${numConfidence} / 10`, margin + 10, currentY + 10);
+    doc.text(`Communication: ${numCommunication} / 10`, margin + 10, currentY + 18);
+    doc.text(`Correctness: ${numCorrectness} / 10`, margin + 10, currentY + 26);
 
     currentY += 45;
 
     let advice = "";
-    if (finalScore >= 8) {
+    if (numFinalScore >= 8) {
       advice = "Excellent performance. Maintain confidence and structure. Continue refining clarity and supporting answers with strong real-world examples.";
-    } else if (finalScore >= 5) {
+    } else if (numFinalScore >= 5) {
       advice = "Good foundation shown. Improve clarity and structure. Practice delivering concise, confident answers with stronger supporting examples.";
     } else {
-      advice = "Significant improvement required. Focus on structured thinking, clarity, and confident delivery. Practice answering aloud regularly."
+      advice = "Significant improvement required. Focus on structured thinking, clarity, and confident delivery. Practice answering aloud regularly.";
     }
 
     doc.setFillColor(255, 255, 255);
@@ -145,7 +141,7 @@ const Step3Report = ({report}) => {
       body: questionWiseScore.map((q, i) => [
         `${i + 1}`,
         q.question,
-        `${q.score}/10`,
+        `${Number(Number(q.score || 0).toFixed(1))}/10`,
         q.feedback
       ]),
       styles: { fontSize: 9, cellPadding: 5, valign: "top" },
@@ -164,7 +160,7 @@ const Step3Report = ({report}) => {
   };
 
   const shareReport = async () => {
-    const shareText = `I just scored a ${finalScore}/10 on my AI Mock Interview at MockMate AI! \n\nPerformance: ${performanceText}\n\nCan you beat my score? Try it out!`;
+    const shareText = `I just scored a ${numFinalScore}/10 on my AI Mock Interview at MockMate AI! \n\nPerformance: ${performanceText}\n\nCan you beat my score? Try it out!`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -253,12 +249,12 @@ const Step3Report = ({report}) => {
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-600"></div>
             <h2 className='text-gray-500 font-bold uppercase tracking-wider mb-8 text-sm'>Overall Performance</h2>
             
-            <div className='relative w-32 h-32 sm:w-40 sm:h-40 mx-auto drop-shadow-md'>
+            <div className='relative w-36 h-36 sm:w-44 sm:h-44 mx-auto drop-shadow-md'>
               <CircularProgressbar 
                 value={percentage} 
-                text={`${score}/10`} 
+                text={`${numFinalScore}/10`} 
                 styles={buildStyles({
-                  textSize: "22px",
+                  textSize: "18px",
                   pathColor: score >= 8 ? "#10b981" : score >= 5 ? "#eab308" : "#ef4444",
                   textColor: "#111827",
                   trailColor: "#f3f4f6",

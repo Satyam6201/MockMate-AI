@@ -410,10 +410,11 @@ export const finishInterview = async (req, res) => {
             totalCorrectness += q.correctness || 0;
         });
 
-        const finalScore = totalQuestions ? totalScore / totalQuestions : 0;
-        const avgConfidence = totalQuestions ? totalConfidence / totalQuestions : 0;
-        const avgCommunication = totalQuestions ? totalCommunication / totalQuestions : 0;
-        const avgCorrectness = totalQuestions ? totalCorrectness / totalQuestions : 0;
+        const rawFinalScore = totalQuestions ? totalScore / totalQuestions : 0;
+        const finalScore = Number(rawFinalScore.toFixed(1));
+        const avgConfidence = Number((totalQuestions ? totalConfidence / totalQuestions : 0).toFixed(1));
+        const avgCommunication = Number((totalQuestions ? totalCommunication / totalQuestions : 0).toFixed(1));
+        const avgCorrectness = Number((totalQuestions ? totalCorrectness / totalQuestions : 0).toFixed(1));
         
         interview.finalScore = finalScore;
         interview.status = "completed";
@@ -421,10 +422,10 @@ export const finishInterview = async (req, res) => {
         await interview.save();
 
         return res.status(200).json({
-            finalScore: Number(finalScore.toFixed(1)),
-            confidence: Number(avgConfidence.toFixed(1)),
-            communication: Number(avgCommunication.toFixed(1)),
-            correctness: Number(avgCorrectness.toFixed(1)),
+            finalScore,
+            confidence: avgConfidence,
+            communication: avgCommunication,
+            correctness: avgCorrectness,
             questionWiseScore: interview.question.map((q) => ({
                 question: q.question,
                 score: q.score || 0,
@@ -445,7 +446,13 @@ export const getMyInterviews = async (req, res) => {
             .sort({ createdAt: -1 })
             .select("role experience mode finalScore status createdAt");
 
-        return res.status(200).json(interviews);
+        const formatted = interviews.map((item) => {
+            const obj = item.toObject();
+            obj.finalScore = Number((obj.finalScore || 0).toFixed(1));
+            return obj;
+        });
+
+        return res.status(200).json(formatted);
     } catch (error) {
         return res.status(500).json({ message: `failed to find currentUser Interview ${error}` });
     }
@@ -460,7 +467,9 @@ export const getInterviewReport = async (req, res) => {
             try {
                 const cachedReport = await redis.get(cacheKey);
                 if (cachedReport) {
-                    return res.json(JSON.parse(cachedReport));
+                    const parsed = JSON.parse(cachedReport);
+                    parsed.finalScore = Number((parsed.finalScore || 0).toFixed(1));
+                    return res.json(parsed);
                 }
             } catch (err) {
                 console.warn("[Redis Report Cache Read Warning]:", err.message);
@@ -490,7 +499,7 @@ export const getInterviewReport = async (req, res) => {
         const avgCorrectness = totalQuestions ? totalCorrectness / totalQuestions : 0;
 
         const reportData = {
-            finalScore: interview.finalScore,
+            finalScore: Number((interview.finalScore || 0).toFixed(1)),
             confidence: Number(avgConfidence.toFixed(1)),
             communication: Number(avgCommunication.toFixed(1)),
             correctness: Number(avgCorrectness.toFixed(1)),

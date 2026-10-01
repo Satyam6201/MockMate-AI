@@ -141,7 +141,7 @@ const InterviewHistory = () => {
             >
               <AnimatePresence>
                 {filteredInterviews.map((item, index) => {
-                  const score = item.finalScore || 0;
+                  const score = Number(Number(item.finalScore || 0).toFixed(1));
                   const scoreColor = score >= 8 ? 'text-emerald-700' : score >= 5 ? 'text-amber-700' : 'text-rose-700';
                   
                   return (
