@@ -42,4 +42,4 @@ services:
 
 networks:
   mockmate-network:
-    driver: bridge
+    driver: bridge 
