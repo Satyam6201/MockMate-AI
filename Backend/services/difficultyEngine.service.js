@@ -1,4 +1,3 @@
-// Difficulty bands
 const DIFFICULTY_BANDS = {
     BEGINNER: { min: 0, max: 20, label: "Beginner" },
     EASY: { min: 21, max: 40, label: "Easy" },

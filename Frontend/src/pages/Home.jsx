@@ -112,7 +112,7 @@ const Home = () => {
               </button>
 
               <button
-                onClick={() => handleProtectedNavigation('/preparation')}
+                onClick={() => handleProtectedNavigation('/prepare')}
                 className='bg-white border border-slate-200 hover:border-teal-500 hover:bg-teal-50/40 text-slate-800 px-7 py-4 rounded-2xl transition-all font-bold text-base sm:text-lg shadow-sm flex items-center justify-center gap-2.5 group'>
                 <FaCode className="text-teal-600 group-hover:scale-110 transition-transform" />
                 SDE Sandbox

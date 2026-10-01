@@ -176,9 +176,9 @@ const Step1SetUp = ({onStart}) => {
               onChange={(e) =>setMode(e.target.value)}
               className='w-full py-4 px-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-green-500 outline-none transition-all shadow-sm font-medium text-gray-700'
               >
-                <option value="Technical">💻 Technical Interview</option>
-                <option value="HR">🤝 HR & Behavioral Interview</option>
-                <option value="Coding Round">⚡ Coding Round (DSA & Web Dev)</option>
+                <option value="Technical">Technical Interview</option>
+                <option value="HR">HR & Behavioral Interview</option>
+                <option value="Coding Round">Coding Round (DSA & Web Dev)</option>
               </select>
             </div>
 

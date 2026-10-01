@@ -3,13 +3,9 @@ import Resume from "../model/resume.model.js";
 import redis from "../config/redis.js";
 import { askAi } from "../services/openRouter.services.js";
 
-// List of Pro templates that require 50 credits
 const PRO_TEMPLATES = ["modern", "compact"];
 const FREE_TEMPLATES = ["executive", "clean"];
 
-/**
- * Controller: Build & Save Resume (Deducts 50 credits for Pro templates)
- */
 export const buildResume = async (req, res) => {
     try {
         const userId = req.userId;
@@ -109,9 +105,7 @@ export const buildResume = async (req, res) => {
     }
 };
 
-/**
- * Controller: AI Bullet Point Enhancer
- */
+//  Controller: AI Bullet Point Enhancer
 export const enhanceBulletWithAi = async (req, res) => {
     try {
         const { bulletText, role = "Software Engineer" } = req.body;
@@ -171,9 +165,9 @@ Original bullet point: "${bulletText}"`;
     }
 };
 
-/**
- * Controller: Get User Saved Resumes
- */
+
+//  Controller: Get User Saved Resumes
+
 export const getUserResumes = async (req, res) => {
     try {
         const userId = req.userId;
