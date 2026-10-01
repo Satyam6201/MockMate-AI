@@ -6,13 +6,11 @@ const validateAiResponse = (responseString) => {
         if (!parsed.question || typeof parsed.question !== 'string') return null;
         if (!parsed.topic || typeof parsed.topic !== 'string') return null;
         
-        // Strip markdown if AI accidentally includes it
         return {
             question: parsed.question.replace(/^["']|["']$/g, '').trim(),
             topic: parsed.topic.trim()
         };
-    } catch (e) {
-        console.error("Failed to parse AI question response:", e);
+    } catch {
         return null;
     }
 };
@@ -28,13 +26,12 @@ export const generateAdaptiveQuestion = async ({
     targetTopic,
     isFollowUp,
     questionType,
-    previousQuestionsContext // array of previous questions to avoid duplicates
+    previousQuestionsContext
 }) => {
     const projectText = Array.isArray(projects) && projects.length ? projects.join(", ") : "None";
     const skillsText = Array.isArray(skills) && skills.length ? skills.join(", ") : "None";
     const safeResume = resumeText?.trim() || "None";
     
-    // Build contextual prompt to avoid duplicates
     let duplicatePrevention = "";
     if (previousQuestionsContext && previousQuestionsContext.length > 0) {
         duplicatePrevention = `
@@ -101,18 +98,15 @@ export const generateAdaptiveQuestion = async ({
 
     try {
         const aiResponse = await askAi(messages);
-        
-        // Sometimes AI returns markdown like ```json ... ```
         const cleanResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();
-        
         const validated = validateAiResponse(cleanResponse);
+        
         if (!validated) {
             throw new Error("AI returned invalid question format");
         }
 
         return { ...validated, questionType };
     } catch (error) {
-        console.error("Error generating adaptive question:", error);
         throw error;
     }
 };

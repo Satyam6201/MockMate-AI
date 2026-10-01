@@ -8,10 +8,9 @@ export const createCheckoutSession = async (req, res) => {
         const { planId, amount, credits } = req.body;
 
         if (!planId || !amount || !credits) {
-            return res.status(400).json({ message: "invalid plan data" });
+            return res.status(400).json({ message: "Invalid plan data" });
         }
 
-        // Mock mode handling if STRIPE_MOCK is true
         if (process.env.STRIPE_MOCK === 'true') {
             const mockSessionId = 'mock_session_' + Date.now();
             await Payment.create({
@@ -35,7 +34,7 @@ export const createCheckoutSession = async (req, res) => {
                         currency: 'inr',
                         product_data: {
                             name: `MockMate AI - ${planId} Plan`,
-                            description: `${credits} AI Interview Credits`,
+                            description: `${credits} AI Platform Credits`,
                         },
                         unit_amount: amount * 100,
                     },
@@ -43,8 +42,6 @@ export const createCheckoutSession = async (req, res) => {
                 },
             ],
             mode: 'payment',
-            // Fix: Use FRONTEND_URL env var instead of hardcoded localhost:5173
-            // This allows the app to work in production and Docker deployments
             success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment`,
             client_reference_id: req.userId.toString(),
@@ -65,9 +62,8 @@ export const createCheckoutSession = async (req, res) => {
         });
 
         return res.json({ id: session.id, url: session.url });
-
     } catch (error) {
-        return res.status(500).json({ message: `failed to create Stripe checkout session: ${error.message}` });
+        return res.status(500).json({ message: `Failed to create Stripe checkout session: ${error.message}` });
     }
 };
 
@@ -83,15 +79,14 @@ export const verifySession = async (req, res) => {
                 payment.stripePaymentIntentId = "mock_intent_" + Date.now();
                 await payment.save();
 
-                // Add credits to user
                 const updatedUser = await User.findByIdAndUpdate(payment.userId, {
                     $inc: { credits: payment.credits }
-                }, {new: true});
+                }, { new: true });
                 
-                return res.json({ success: true, message: "Mock Payment verified", user: updatedUser });
+                return res.json({ success: true, message: "Payment verified", user: updatedUser });
             } else if (payment && payment.status === 'paid') {
                 const user = await User.findById(payment.userId);
-                return res.json({ success: true, message: "Mock Payment already processed", user });
+                return res.json({ success: true, message: "Payment already processed", user });
             }
             return res.status(400).json({ message: "Payment not completed" });
         }
@@ -106,10 +101,9 @@ export const verifySession = async (req, res) => {
                 payment.stripePaymentIntentId = session.payment_intent;
                 await payment.save();
 
-                // Add credits to user
                 const updatedUser = await User.findByIdAndUpdate(payment.userId, {
                     $inc: { credits: payment.credits }
-                }, {new: true});
+                }, { new: true });
                 
                 return res.json({ success: true, message: "Payment verified", user: updatedUser });
             } else if (payment && payment.status === 'paid') {
@@ -131,14 +125,12 @@ export const stripeWebhook = async (req, res) => {
     let event;
 
     try {
-        // req.body must be the raw buffer here
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
         console.error('Webhook Error:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
         const sessionId = session.id;
@@ -152,7 +144,6 @@ export const stripeWebhook = async (req, res) => {
                 payment.stripePaymentIntentId = paymentIntentId;
                 await payment.save();
 
-                // Add credits to user
                 await User.findByIdAndUpdate(payment.userId, {
                     $inc: { credits: payment.credits }
                 });
@@ -161,7 +152,7 @@ export const stripeWebhook = async (req, res) => {
                     const io = getIO();
                     io.to(`user:${payment.userId}`).emit("notification", {
                         title: "Payment successful ✓",
-                        message: `+${payment.credits} Interview Credits added`,
+                        message: `+${payment.credits} Credits added`,
                         type: "success"
                     });
                     
@@ -169,8 +160,6 @@ export const stripeWebhook = async (req, res) => {
                 } catch (socketError) {
                     console.error("Socket error on webhook", socketError);
                 }
-
-                console.log(`Payment successful for user ${payment.userId}. Credits added: ${payment.credits}`);
             }
         } catch (error) {
             console.error('Error fulfilling order:', error);
@@ -178,6 +167,5 @@ export const stripeWebhook = async (req, res) => {
         }
     }
 
-    // Return a 200 response to acknowledge receipt of the event
     res.send();
 };

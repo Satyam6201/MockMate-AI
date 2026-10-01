@@ -22,27 +22,24 @@ export const buildResume = async (req, res) => {
 
         const isPro = PRO_TEMPLATES.includes(template);
 
-        // Credit check for Pro templates
         if (isPro) {
             if (user.credits < 50) {
                 return res.status(403).json({
                     success: false,
                     insufficientCredits: true,
-                    message: "Insufficient credits! 50 credits are required for Pro ATS templates. You can switch to our Free templates (Harvard Classic / Minimalist) or recharge credits.",
+                    message: "Insufficient credits! 50 credits are required for Pro ATS templates.",
                     credits: user.credits,
                     requiredCredits: 50,
                     allowedFreeTemplates: FREE_TEMPLATES
                 });
             }
 
-            // Deduct 50 credits atomically
             const updatedUser = await User.findByIdAndUpdate(
                 userId,
                 { $inc: { credits: -50 } },
                 { new: true }
             );
 
-            // Invalidate redis cache if available
             if (redis) {
                 try {
                     await redis.del(`user:${userId}`);
@@ -51,7 +48,6 @@ export const buildResume = async (req, res) => {
                 }
             }
 
-            // Save or update Resume record
             const savedResume = await Resume.create({
                 userId,
                 template,
@@ -74,7 +70,6 @@ export const buildResume = async (req, res) => {
             });
         }
 
-        // Free Template Path (0 Credits deducted)
         const savedResume = await Resume.create({
             userId,
             template,
@@ -105,7 +100,6 @@ export const buildResume = async (req, res) => {
     }
 };
 
-//  Controller: AI Bullet Point Enhancer
 export const enhanceBulletWithAi = async (req, res) => {
     try {
         const { bulletText, role = "Software Engineer" } = req.body;
@@ -130,7 +124,6 @@ Original bullet point: "${bulletText}"`;
                 { role: "user", content: prompt }
             ]);
 
-            // Clean markdown code blocks if present
             const cleanContent = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
             const suggestions = JSON.parse(cleanContent);
 
@@ -145,7 +138,6 @@ Original bullet point: "${bulletText}"`;
 
         } catch (aiError) {
             console.warn("[AI Enhancement fallback]:", aiError.message);
-            // Fallback smart algorithmic suggestions
             const clean = bulletText.trim().toLowerCase();
             return res.status(200).json({
                 success: true,
@@ -164,9 +156,6 @@ Original bullet point: "${bulletText}"`;
         });
     }
 };
-
-
-//  Controller: Get User Saved Resumes
 
 export const getUserResumes = async (req, res) => {
     try {

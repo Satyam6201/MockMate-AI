@@ -1,15 +1,8 @@
 import axios from 'axios';
 
 const MAX_RETRIES = 3;
-const BASE_DELAY_MS = 1000; // 1 second base delay for exponential backoff
+const BASE_DELAY_MS = 1000;
 
-/**
- * Senior-grade AI caller with:
- * - Exponential backoff retries (3 attempts)
- * - 30s per-request timeout
- * - Proper error classification (rate limit, network, empty response)
- * - Fallback-friendly error messages
- */
 export const askAi = async (messages, retryCount = 0) => {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
         throw new Error("AI_INVALID_INPUT: messages array is empty or invalid");
@@ -33,7 +26,7 @@ export const askAi = async (messages, retryCount = 0) => {
                     'HTTP-Referer': process.env.SITE_URL || 'http://localhost:8080',
                     'X-Title': 'MockMate AI',
                 },
-                timeout: 30000, // 30 second timeout per request
+                timeout: 30000,
             }
         );
 
@@ -49,39 +42,23 @@ export const askAi = async (messages, retryCount = 0) => {
         const status = error.response?.status;
         const errData = error.response?.data;
 
-        // Log detailed error for debugging
-        console.error(`[OpenRouter] Error (attempt ${retryCount + 1}/${MAX_RETRIES}):`, {
-            status,
-            message: error.message,
-            data: errData,
-        });
-
-        // === Determine if we should retry ===
-
-        // Rate limit (429) — wait and retry
         if (status === 429 && retryCount < MAX_RETRIES - 1) {
-            const delay = BASE_DELAY_MS * Math.pow(2, retryCount); // 1s, 2s, 4s
-            console.warn(`[OpenRouter] Rate limited. Retrying in ${delay}ms...`);
+            const delay = BASE_DELAY_MS * Math.pow(2, retryCount);
             await new Promise(resolve => setTimeout(resolve, delay));
             return askAi(messages, retryCount + 1);
         }
 
-        // Transient server errors (500, 502, 503) — retry
         if ([500, 502, 503].includes(status) && retryCount < MAX_RETRIES - 1) {
             const delay = BASE_DELAY_MS * Math.pow(2, retryCount);
-            console.warn(`[OpenRouter] Server error ${status}. Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return askAi(messages, retryCount + 1);
         }
 
-        // Network timeout — retry once
         if (error.code === 'ECONNABORTED' && retryCount < MAX_RETRIES - 1) {
-            console.warn(`[OpenRouter] Request timed out. Retrying...`);
             await new Promise(resolve => setTimeout(resolve, BASE_DELAY_MS));
             return askAi(messages, retryCount + 1);
         }
 
-        // === Non-retryable errors — throw with clear message ===
         if (status === 401) {
             throw new Error("AI_AUTH_ERROR: Invalid OpenRouter API key. Check your OPENROUTER_API_KEY.");
         }
@@ -92,7 +69,6 @@ export const askAi = async (messages, retryCount = 0) => {
             throw new Error(`AI_BAD_REQUEST: ${errData?.error?.message || "Invalid request to AI"}`);
         }
 
-        // Fallback — throw with the original message
         throw new Error(`AI_REQUEST_FAILED: ${error.message}`);
     }
 };

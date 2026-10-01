@@ -15,11 +15,8 @@ export const getDifficultyLabel = (score) => {
 };
 
 export const getBaselineDifficulty = (role = "", experience = "") => {
-    let baseScore = 40; // Default Easy/Medium
-
+    let baseScore = 40;
     const combined = `${role} ${experience}`.toLowerCase();
-
-    // Check senior/lead keywords or >= 5 years of experience
     const yearsMatch = combined.match(/(\d+)\s*(?:\+)?\s*(?:year|yr)/i);
     const years = yearsMatch ? parseInt(yearsMatch[1], 10) : null;
 
@@ -32,31 +29,28 @@ export const getBaselineDifficulty = (role = "", experience = "") => {
         combined.includes('8+') ||
         (years !== null && years >= 5)
     ) {
-        baseScore = 70; // Hard
+        baseScore = 70;
     } else if (
         combined.includes('mid') || 
         (years !== null && years >= 2 && years < 5) ||
         combined.includes('3') || 
         combined.includes('4')
     ) {
-        baseScore = 50; // Medium
+        baseScore = 50;
     } else if (
         combined.includes('fresher') || 
         combined.includes('junior') || 
         combined.includes('intern') ||
         (years !== null && years <= 1)
     ) {
-        baseScore = 30; // Easy
+        baseScore = 30;
     }
 
     return baseScore;
 };
 
-
 export const extractTopics = (role, resumeText) => {
-    // Basic fallback topics based on role
     const defaultTopics = ["Core Fundamentals", "Problem Solving", "Scenario Based"];
-    
     const detectedTopics = new Set();
     const text = (role + " " + (resumeText || "")).toLowerCase();
 
@@ -74,17 +68,8 @@ export const extractTopics = (role, resumeText) => {
     return defaultTopics;
 };
 
-/**
- * Calculates the parameters for the next question.
- * 
- * @param {Object} interview - The full interview document
- * @param {Number} currentQuestionIndex - The index of the question just answered
- * @returns {Object} - { targetDifficultyScore, targetDifficultyLabel, targetTopic, isFollowUp }
- */
 export const calculateNextQuestionParams = (interview, currentQuestionIndex) => {
     const questions = interview.question;
-    
-    // 1. Calculate historical performance
     let recentScoreSum = 0;
     let recentCount = 0;
     
@@ -98,38 +83,34 @@ export const calculateNextQuestionParams = (interview, currentQuestionIndex) => 
     }
     const avgRecentScore = recentCount > 0 ? (recentScoreSum / recentCount) : 5;
 
-    // 2. Structured Progression: 5 Easy, 3 Medium, 2 Hard
-    // We blend the structured progression with the candidate's actual performance.
     let baseScore;
     let questionType;
-    let timeLimit = 60; // default 60s
+    let timeLimit = 60;
     
-    // Using currentQuestionIndex + 1 because this calculates for the *next* question
     const nextIndex = currentQuestionIndex + 1;
 
     if (interview.mode === "Coding Round") {
         questionType = "Coding";
         if (nextIndex === 1) {
-            baseScore = 50; // Medium
+            baseScore = 50;
         } else {
-            baseScore = 70; // Hard
+            baseScore = 70;
         }
     } else {
         if (nextIndex < 5) {
-            baseScore = 30; // Easy
+            baseScore = 30;
             questionType = Math.random() > 0.5 ? "Conceptual" : "Scenario-based";
         } else if (nextIndex < 8) {
-            baseScore = 50; // Medium
+            baseScore = 50;
             questionType = "Scenario-based";
             timeLimit = 90;
         } else {
-            baseScore = 70; // Hard
-            questionType = "Coding"; // Hard questions include coding
-            timeLimit = 180; // 3 minutes for coding
+            baseScore = 70;
+            questionType = "Coding";
+            timeLimit = 180;
         }
     }
 
-    // Adjust slightly based on performance, but keep them roughly in their phase band
     let nextDifficultyScore = baseScore;
     if (avgRecentScore >= 8) {
         nextDifficultyScore += 10;
@@ -142,15 +123,14 @@ export const calculateNextQuestionParams = (interview, currentQuestionIndex) => 
     
     if (interview.mode === "Coding Round") {
         if (targetDifficultyLabel === "Easy" || targetDifficultyLabel === "Beginner") {
-            timeLimit = 1800; // 30 minutes
+            timeLimit = 1800;
         } else if (targetDifficultyLabel === "Medium") {
-            timeLimit = 2700; // 45 minutes
+            timeLimit = 2700;
         } else {
-            timeLimit = 3600; // 1 hour
+            timeLimit = 3600;
         }
     }
     
-    // 3. Topic Selection & Follow-up logic
     const askedTopics = new Set(questions.map(q => q.topic).filter(Boolean));
     const allTopics = extractTopics(interview.role, interview.resumeText);
     

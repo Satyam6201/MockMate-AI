@@ -2,7 +2,6 @@ import { Server } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
 import Redis from "ioredis";
 import jwt from "jsonwebtoken";
-import cookie from "cookie"; // Might need to use the 'cookie' package or just parse manually
 import Interview from "../model/interview.model.js";
 
 let io;
@@ -15,7 +14,6 @@ export const initSocket = (httpServer) => {
         "http://localhost:8080"
     ].filter(Boolean);
 
-    // We create an IO instance
     io = new Server(httpServer, {
         cors: {
             origin: (origin, callback) => {
@@ -33,7 +31,6 @@ export const initSocket = (httpServer) => {
         }
     });
 
-    // Redis Adapter for horizontal scaling (Cluster mode support)
     const redisUrl = process.env.REDIS_URL;
     const isLocalhostRedisInProd = process.env.NODE_ENV === "production" && redisUrl && redisUrl.includes("localhost");
 
@@ -42,7 +39,7 @@ export const initSocket = (httpServer) => {
             const pubClient = new Redis(redisUrl, {
                 maxRetriesPerRequest: 3,
                 retryStrategy(times) {
-                    if (times > 3) return null; // Stop retrying after 3 attempts
+                    if (times > 3) return null;
                     return Math.min(times * 300, 2000);
                 }
             });
@@ -60,18 +57,14 @@ export const initSocket = (httpServer) => {
                 new Promise((resolve) => subClient.once('ready', resolve))
             ]).then(() => {
                 io.adapter(createAdapter(pubClient, subClient));
-                console.log("✅ Socket.IO Redis adapter connected & enabled");
             }).catch((err) => {
-                console.warn("⚠️ Redis unreachable for Socket.IO, continuing with in-memory adapter:", err.message);
+                console.warn("Redis unreachable for Socket.IO, using in-memory adapter:", err.message);
             });
         } catch (err) {
-            console.warn("⚠️ Failed to initialize Socket Redis adapter, using in-memory adapter:", err.message);
+            console.warn("Failed to initialize Socket Redis adapter:", err.message);
         }
-    } else {
-        console.log("ℹ️ Running Socket.IO with standard in-memory adapter");
     }
 
-    // Middleware for authentication
     io.use((socket, next) => {
         try {
             const cookieHeader = socket.request.headers.cookie;
@@ -79,7 +72,6 @@ export const initSocket = (httpServer) => {
                 return next(new Error("Authentication error: No cookies found"));
             }
 
-            // Simple cookie parse
             const cookies = cookieHeader.split(';').reduce((res, c) => {
                 const [key, val] = c.trim().split('=').map(decodeURIComponent);
                 try {
@@ -102,11 +94,7 @@ export const initSocket = (httpServer) => {
         }
     });
 
-    // Connection handling
     io.on("connection", (socket) => {
-        console.log(`Socket connected: ${socket.id} (User: ${socket.userId})`);
-
-        // Automatically join the user to their private room
         const userRoom = `user:${socket.userId}`;
         socket.join(userRoom);
 
@@ -117,9 +105,7 @@ export const initSocket = (httpServer) => {
                     return callback && callback({ success: false, error: "Interview ID required" });
                 }
 
-                // Verify ownership (idempotent, doesn't matter if called multiple times)
                 const interview = await Interview.findOne({ _id: interviewId, userId: socket.userId });
-                
                 if (!interview) {
                     return callback && callback({ success: false, error: "Unauthorized or Interview not found" });
                 }
@@ -127,24 +113,19 @@ export const initSocket = (httpServer) => {
                 const interviewRoom = `interview:${interviewId}`;
                 socket.join(interviewRoom);
                 
-                // Successfully joined
                 if (callback) callback({ success: true, message: `Joined interview room: ${interviewId}` });
-                
             } catch (error) {
                 console.error("Socket join_interview Error:", error);
                 if (callback) callback({ success: false, error: "Internal server error" });
             }
         });
 
-        socket.on("disconnect", () => {
-            console.log(`Socket disconnected: ${socket.id} (User: ${socket.userId})`);
-        });
+        socket.on("disconnect", () => {});
     });
 
     return io;
 };
 
-// Export a getter so controllers can emit events without needing to pass io down everywhere
 export const getIO = () => {
     if (!io) {
         throw new Error("Socket.io is not initialized!");

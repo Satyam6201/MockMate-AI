@@ -15,7 +15,6 @@ import { globalLimiter } from "./middleware/rateLimit.js";
 
 const app = express();
 
-// Enable GZIP compression for all responses
 app.use(compression());
 
 const allowedOrigins = [
@@ -40,17 +39,16 @@ app.use(cors({
     credentials: true
 }));
 
-// Stripe webhook must use raw body parser
 app.post("/api/payment/webhook", express.raw({ type: 'application/json' }), stripeWebhook);
 
 app.use(express.json());
 app.use(cookieParser());
 
-// SECURITY MIDDLEWARES 
 app.use(helmet({
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
 app.use((req, res, next) => {
     if (req.body) mongoSanitize.sanitize(req.body);
     if (req.params) mongoSanitize.sanitize(req.params);
@@ -58,10 +56,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Apply global rate limiting to all requests
 app.use(globalLimiter);
 
-// Root & Health Check Endpoints
 app.get("/", (req, res) => {
     res.status(200).json({ status: "healthy", message: "MockMate AI Backend is running" });
 });
@@ -77,15 +73,13 @@ app.use("/api/payment", paymentRouter);
 app.use("/api/chatbot", chatbotRouter);
 app.use("/api/resume", resumeRouter);
 
-// Global 404 Handler for undefined API routes
-app.use((req, res, next) => {
+app.use((req, res) => {
     res.status(404).json({
         success: false,
         message: `API endpoint ${req.originalUrl} not found.`
     });
 });
 
-// Global Error Handler for unhandled exceptions
 app.use((err, req, res, next) => {
     console.error(`[Express Error]:`, err.message || err);
     res.status(err.status || 500).json({

@@ -5,7 +5,6 @@ const isAuth = async (req, res, next) => {
         const { token } = req.cookies;
 
         if (!token) {
-            // Fix: 401 Unauthorized is the correct HTTP status for missing auth tokens (not 400)
             return res.status(401).json({ message: "Authentication token is missing. Please login to continue." });
         }
 
@@ -19,9 +18,8 @@ const isAuth = async (req, res, next) => {
         next();
 
     } catch (error) {
-        // jwt.verify throws JsonWebTokenError / TokenExpiredError — always 401
         return res.status(401).json({ message: "Session expired or invalid. Please login again." });
     }
-}
+};
 
 export default isAuth;
